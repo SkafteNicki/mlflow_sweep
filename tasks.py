@@ -16,7 +16,7 @@ def clean(ctx: Context) -> None:
 @task
 def tests(ctx: Context) -> None:
     """Test and coverage."""
-    ctx.run("uv run coverage run -m pytest tests/unittests -v", echo=True, pty=True)
+    ctx.run("uv run coverage run -m pytest tests/ -v", echo=True, pty=True)
     ctx.run("uv run coverage report -i -m", echo=True, pty=True)
 
 

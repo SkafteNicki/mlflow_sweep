@@ -10,11 +10,7 @@ class SweepContextProvider(RunContextProvider):
     """
 
     def in_context(self) -> bool:
-        return bool(
-            os.environ.get(
-                "SWEEP_PARENT_RUN_ID",
-            )
-        )
+        return bool(os.environ.get("SWEEP_PARENT_RUN_ID"))
 
     def tags(self) -> dict[str, str]:
         return {MLFLOW_PARENT_RUN_ID: os.environ.get("SWEEP_PARENT_RUN_ID")}

@@ -5,9 +5,6 @@ command:
 experiment_name: sweep-demo
 sweep_name: test-sweep
 method: random
-metric:
-  name: accuracy
-  goal: maximize
 parameters:
   learning_rate:
     distribution: uniform
