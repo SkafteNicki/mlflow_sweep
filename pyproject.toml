@@ -23,6 +23,7 @@ dependencies = [
   "mlflow>=3.1",
   "pydantic>=2.11.5",
   "pyyaml>=6.0.2",
+  "rich>=14",
   "sweeps>=0.2",
 ]
 

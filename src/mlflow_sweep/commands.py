@@ -6,6 +6,7 @@ import mlflow
 from mlflow.entities import Run
 import os
 import subprocess
+from rich import print as rprint
 
 
 def init_command(config_path: Path) -> None:
@@ -24,7 +25,7 @@ def init_command(config_path: Path) -> None:
     run = mlflow.start_run(run_name=config.sweep_name)
     mlflow.set_tag("sweep", True)
     mlflow.log_artifact(str(config_path))
-    print(run.info.run_id)
+    rprint(f"[bold green]Sweep initialized with ID: {run.info.run_id}[/bold green]")
 
 
 def start_command(sweep_id: str = "") -> None:
@@ -66,7 +67,7 @@ def start_command(sweep_id: str = "") -> None:
         while True:
             output = sweep_processor.propose_next()
             if output is None:
-                print("No more runs can be proposed or run cap reached.")
+                rprint("[bold red]No more runs can be proposed or run cap reached.[/bold red]")
                 break
             command, data = output
             table_data = {k: [str(v)] for k, v in data.items()}
@@ -74,8 +75,10 @@ def start_command(sweep_id: str = "") -> None:
                 data=table_data,
                 artifact_file="proposed_parameters.json",
             )
-            print(f"Executed command: {command}")
+            rprint(f"[bold blue]Executed command:[/bold blue] \n[italic]{command}[/italic]")
+            rprint(50 * "─")
             subprocess.run(command, shell=True, env=env, check=True)
+            rprint(50 * "─")
 
 
 def finalize_command(sweep_id: str = "") -> None:

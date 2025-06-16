@@ -980,6 +980,7 @@ dependencies = [
     { name = "mlflow" },
     { name = "pydantic" },
     { name = "pyyaml" },
+    { name = "rich" },
     { name = "sweeps" },
 ]
 
@@ -1001,13 +1002,14 @@ requires-dist = [
     { name = "mlflow", specifier = ">=3.1" },
     { name = "pydantic", specifier = ">=2.11.5" },
     { name = "pyyaml", specifier = ">=6.0.2" },
+    { name = "rich", specifier = ">=14.0.0" },
     { name = "sweeps", specifier = ">=0.2" },
 ]
 
 [package.metadata.requires-dev]
 dev = [
     { name = "coverage", specifier = ">=7.9.1" },
-    { name = "invoke", specifier = ">=2.2.0" },
+    { name = "invoke", specifier = ">=2.2" },
     { name = "ipython", specifier = ">=9.3" },
     { name = "pre-commit", specifier = ">=4.2" },
     { name = "pytest", specifier = ">=8.4" },
