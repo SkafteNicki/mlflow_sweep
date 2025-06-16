@@ -2,7 +2,7 @@ def cli():
     """Wrapper CLI around the standard MLflow CLI to add sweep commands."""
     from mlflow.cli import cli as mlflow_cli
     import click
-    from mlflow_sweep.commands import init_command, start_command, finalize_command
+    from mlflow_sweep.commands import init_command, run_command, finalize_command
 
     @mlflow_cli.group()
     def sweep():
@@ -22,9 +22,9 @@ def cli():
         type=str,
         help="ID of the sweep to start the agent for (optional if not specified will use the most recent initialized sweep)",
     )
-    def start(sweep_id):
+    def run(sweep_id):
         """Start a sweep agent."""
-        start_command(sweep_id)
+        run_command(sweep_id)
 
     @sweep.command("finalize")
     @click.option(

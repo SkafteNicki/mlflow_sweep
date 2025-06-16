@@ -65,13 +65,13 @@ jobs:
           pip install \
             --index-url https://test.pypi.org/simple/ \
             --extra-index-url https://pypi.org/simple/ \
-            dtu-compute
+            mlflow-sweep
 
       - name: Test cli
         run: |
-          dtu --help
-          dtu hpc --help
-          dtu titans --help
+          mlflow sweep --help
+          mlflow sweep init --help
+          mlflow sweep run --help
 
       - name: Publish to PyPI
         run: uv publish --trusted-publishing always

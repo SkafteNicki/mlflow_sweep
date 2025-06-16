@@ -38,5 +38,5 @@ jobs:
 
       - name: Run tests
         run: |
-          uv run coverage run -m pytest tests/unittests -v
+          uv run coverage run -m pytest tests/ -v
           uv run coverage report -i -m

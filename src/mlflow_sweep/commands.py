@@ -28,8 +28,8 @@ def init_command(config_path: Path) -> None:
     rprint(f"[bold green]Sweep initialized with ID: {run.info.run_id}[/bold green]")
 
 
-def start_command(sweep_id: str = "") -> None:
-    """Start a sweep agent."""
+def run_command(sweep_id: str = "") -> None:
+    """Run a sweep agent."""
     sweeps: list[Run] = mlflow.search_runs(  # ty: ignore[invalid-assignment]
         search_all_experiments=True,
         filter_string="tag.sweep = 'True'",
