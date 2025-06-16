@@ -12,6 +12,26 @@ def calculate_feature_importance_and_correlation(
     Args:
         metric_value (np.ndarray): Array of metric values (e.g., validation loss).
         parameter_values (dict[str, np.ndarray]): Dictionary where keys are parameter names and values are arrays of parameter values.
+
+    Returns:
+        dict: Dictionary with parameter names as keys and dictionaries containing importance,
+              permutation importance, and correlation metrics as values.
+
+    Examples:
+        >>> import numpy as np
+        >>> np.random.seed(42)  # For reproducibility
+        >>> metric = np.array([0.1, 0.2, 0.15, 0.25, 0.3])
+        >>> params = {
+        ...     'learning_rate': np.array([0.01, 0.02, 0.01, 0.03, 0.02]),
+        ...     'batch_size': np.array([32, 64, 32, 128, 64])
+        ... }
+        >>> result = calculate_feature_importance_and_correlation(metric, params)
+        >>> sorted(result.keys())
+        ['batch_size', 'learning_rate']
+        >>> all(k in result['learning_rate'] for k in ['importance', 'permutation_importance', 'correlation'])
+        True
+        >>> all(k in result['learning_rate']['correlation'] for k in ['pearson', 'spearman'])
+        True
     """
     data = np.column_stack(list(parameter_values.values()))
 

@@ -14,6 +14,12 @@ def clean(ctx: Context) -> None:
 
 
 @task
+def doctests(ctx: Context) -> None:
+    """Run doctests."""
+    ctx.run("uv run pytest src/mlflow_sweep", echo=True, pty=True)
+
+
+@task
 def tests(ctx: Context) -> None:
     """Test and coverage."""
     ctx.run("uv run coverage run -m pytest tests/ -v", echo=True, pty=True)
@@ -26,7 +32,7 @@ def check(ctx: Context) -> None:
     ctx.run("uv run pre-commit run --all-files", echo=True, pty=True)
 
 
-@task(pre=[check, tests, clean])
+@task(pre=[check, doctests, tests, clean])
 def all(ctx: Context) -> None:
     """Run all tasks."""
     pass
