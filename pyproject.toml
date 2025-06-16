@@ -26,9 +26,9 @@ dependencies = [
   "sweeps>=0.2",
 ]
 
-scripts.mlflow = "mlflow_sweep:mlflow_cli"
+scripts.mlflow = "mlflow_sweep.__init__:cli"
 
-entry-points."mlflow.run_context_provider".unused = "mlflow_sweep.runcontext:SweepContextProvider"
+entry-points."mlflow.run_context_provider".sweep = "mlflow_sweep.runcontext:SweepContextProvider"
 
 [dependency-groups]
 dev = [
