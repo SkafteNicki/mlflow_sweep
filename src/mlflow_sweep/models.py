@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from enum import Enum
 from mlflow.utils.name_utils import _generate_random_name
 
@@ -19,6 +19,8 @@ class MetricConfig(BaseModel):
 
 
 class SweepConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     command: str = Field(..., description="Command to run for each sweep trial")
     experiment_name: str = Field("", description="Name of the MLflow experiment")
     sweep_name: str = Field("", description="Name of the sweep")
