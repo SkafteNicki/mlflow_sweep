@@ -26,14 +26,16 @@ dependencies = [
   "sweeps>=0.2",
 ]
 
-scripts.mlflow = "mlflow_sweep.cli:mlflow_cli"
+scripts.mlflow = "mlflow_sweep:mlflow_cli"
+
+entry-points."mlflow.run_context_provider".unused = "mlflow_sweep.runcontext:SweepContextProvider"
 
 [dependency-groups]
 dev = [
   "coverage>=7.9.1",
   "ipython>=9.3",
   "pre-commit>=4.2",
-  "pytest>=8.4.0",
+  "pytest>=8.4",
   "ruff>=0.11.13",
   "ty>=0.0.1a10",
   "typer>=0.16",
