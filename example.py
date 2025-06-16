@@ -5,8 +5,11 @@ import time
 
 app = typer.Typer()
 
+
 @app.command()
-def main(learning_rate: float = 0.001, batch_size: int = 32, parent_run_id: str | None = None):
+def main(
+    learning_rate: float = 0.001, batch_size: int = 32, parent_run_id: str | None = None
+):
     """
     Example command that takes learning rate and batch size as arguments.
     """
@@ -22,6 +25,7 @@ def main(learning_rate: float = 0.001, batch_size: int = 32, parent_run_id: str 
         mlflow.log_metric("metric2", random.uniform(0, 1))
 
         time.sleep(100 * random.uniform(0.1, 1.0))  # Simulate a long-running process
+
 
 if __name__ == "__main__":
     app()

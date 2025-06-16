@@ -1,10 +1,10 @@
-command: 
+command:
   uv run example.py
   --learning-rate ${learning_rate}
   --batch-size ${batch_size}
   --parent-run-id ${parent_run_id}
 experiment_name: sweep-demo
-sweep_name: test-sweep 
+sweep_name: test-sweep
 method: random
 metric:
   name: accuracy
