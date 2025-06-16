@@ -18,7 +18,7 @@ def cli():
         """Initialize a new sweep configuration."""
         init_command(config_path)
 
-    @sweep.command("start")
+    @sweep.command("run")
     @click.option(
         "--sweep-id",
         default="",

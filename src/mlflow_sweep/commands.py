@@ -20,11 +20,14 @@ def init_command(config_path: Path) -> None:
         config = yaml.safe_load(file)
 
     config = SweepConfig(**config)  # validate the config
+    rprint("[bold blue]Initializing sweep with configuration:[/bold blue]")
+    rprint(config)
 
     mlflow.set_experiment(config.experiment_name)
     run = mlflow.start_run(run_name=config.sweep_name)
     mlflow.set_tag("sweep", True)
     mlflow.log_artifact(str(config_path))
+
     rprint(f"[bold green]Sweep initialized with ID: {run.info.run_id}[/bold green]")
 
 
