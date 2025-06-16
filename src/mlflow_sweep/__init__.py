@@ -1,3 +1,6 @@
+__version__ = "0.1.0"
+
+
 def cli():
     """Wrapper CLI around the standard MLflow CLI to add sweep commands."""
     from mlflow.cli import cli as mlflow_cli

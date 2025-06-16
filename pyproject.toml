@@ -47,3 +47,12 @@ dev = [
 [tool.ruff]
 target-version = "py311"
 line-length = 120
+
+[tool.semantic_release]
+version_toml = [ "pyproject.toml:project.version" ]
+version_variables = [ "src/mlflow_sweep/__init__.py:__version__" ]
+branch = "main"
+changelog_file = "CHANGELOG.md"
+build_command = "uv build"
+upload_to_release = true
+upload_to_pypi = false
