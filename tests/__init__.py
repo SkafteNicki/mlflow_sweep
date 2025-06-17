@@ -1,1 +1,1 @@
-# Empty init file to make tests a package
+# Empty file to make the tests directory a proper Python package

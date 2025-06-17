@@ -33,6 +33,17 @@ def calculate_feature_importance_and_correlation(
         >>> all(k in result['learning_rate']['correlation'] for k in ['pearson', 'spearman'])
         True
     """
+    # Check for empty parameter set
+    if not parameter_values:
+        raise ValueError("Parameter values dictionary cannot be empty")
+
+    # Check that all parameter arrays have the same length as the metric array
+    for param_name, param_array in parameter_values.items():
+        if len(param_array) != len(metric_value):
+            raise ValueError(
+                f"Parameter '{param_name}' has {len(param_array)} values, but metric has {len(metric_value)} values"
+            )
+
     data = np.column_stack(list(parameter_values.values()))
 
     model = RandomForestRegressor()
