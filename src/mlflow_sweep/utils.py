@@ -2,6 +2,7 @@ import numpy as np
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.inspection import permutation_importance
 from scipy.stats import pearsonr, spearmanr
+import datetime
 
 
 def calculate_feature_importance_and_correlation(
@@ -51,7 +52,7 @@ def calculate_feature_importance_and_correlation(
     importances = model.feature_importances_
 
     perm = permutation_importance(model, data, metric_value, n_repeats=30)
-    perm_importances = perm.importances_mean
+    perm_importances = perm["importances_mean"]
 
     correlations = {}
     for i, param in enumerate(parameter_values.keys()):
@@ -60,7 +61,25 @@ def calculate_feature_importance_and_correlation(
         correlations[param] = {"pearson": pearson_corr, "spearman": spearman_corr}
 
     result = {
-        k: {"importance": v, "permutation_importance": perm_importances[i], "correlation": correlations[k]}
+        k: {
+            "importance": float(v),
+            "permutation_importance": float(perm_importances[i]),
+            "pearson": float(correlations[k]["pearson"]),
+            "spearman": float(correlations[k]["spearman"]),
+        }
         for i, (k, v) in enumerate(zip(parameter_values.keys(), importances))
     }
     return result
+
+
+def current_time_convert(ts_ms: int) -> str:
+    """Convert a timestamp in milliseconds to a formatted UTC string.
+
+    Args:
+        ts_ms (int): Timestamp in milliseconds.
+
+    Returns:
+        str: Formatted UTC time string in 'YYYY-MM-DD HH:MM:SS' format.
+    """
+    dt_utc = datetime.datetime.utcfromtimestamp(ts_ms / 1000)
+    return dt_utc.strftime("%Y-%m-%d %H:%M:%S")

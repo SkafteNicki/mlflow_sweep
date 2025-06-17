@@ -11,6 +11,12 @@ from rich import print as rprint
 import uuid
 import tempfile
 import shutil
+import numpy as np
+from mlflow_sweep.utils import calculate_feature_importance_and_correlation, current_time_convert
+from rich.table import Table
+from rich.console import Console
+from mlflow_sweep.plotting import plot_metric_vs_time, plot_parameter_importance_and_correlation
+import pandas as pd
 
 
 def determine_sweep(sweep_id: str) -> Run:
@@ -67,7 +73,7 @@ def run_command(sweep_id: str = "") -> None:
 
     config = SweepConfig.from_sweep(sweep)
     runstate = SweepState(sweep_id=sweep.info.run_id)
-    sweep_processor = SweepSampler(config, runstate)
+    sweep_sampler = SweepSampler(config, runstate)
 
     mlflow.set_experiment(experiment_id=sweep.info.experiment_id)
     mlflow.start_run(run_id=sweep.info.run_id)
@@ -79,7 +85,7 @@ def run_command(sweep_id: str = "") -> None:
     global_env["SWEEP_AGENT_ID"] = str(uuid.uuid4())  # Unique ID for this agent
 
     while True:
-        output = sweep_processor.propose_next()
+        output = sweep_sampler.propose_next()
         if output is None:
             rprint("[bold red]No more runs can be proposed or run cap reached.[/bold red]")
             break
@@ -98,4 +104,60 @@ def run_command(sweep_id: str = "") -> None:
 
 def finalize_command(sweep_id: str = "") -> None:
     """Finalize a sweep."""
-    print(sweep_id)
+    sweep = determine_sweep(sweep_id)
+    config = SweepConfig.from_sweep(sweep)
+    runstate = SweepState(sweep_id=sweep.info.run_id)
+    all_runs = runstate.get_all()
+
+    if config.metric is not None:
+        metric_values = np.array([run.summary_metrics.get(config.metric.name) for run in all_runs])
+        parameter_values = {
+            param_name: np.array([run.config[param_name]["value"] for run in all_runs])
+            for param_name in config.parameters.keys()
+        }
+
+        features = calculate_feature_importance_and_correlation(metric_values, parameter_values)
+
+        # Create the table
+        table = Table(title=f"Feature Importance and Correlation for {config.metric.name}", show_lines=True)
+
+        # Add columns
+        table.add_column("Parameter", style="bold magenta")
+        table.add_column("Importance", justify="right")
+        table.add_column("Permutation Importance", justify="right")
+        table.add_column("Pearson", justify="right")
+        table.add_column("Spearman", justify="right")
+
+        # Add rows
+        for param, stats in features.items():
+            table.add_row(
+                param,
+                f"{stats['importance']:.4f}",
+                f"{stats['permutation_importance']:.4f}",
+                f"{stats['pearson']:.4f}",
+                f"{stats['spearman']:.4f}",
+            )
+
+        # Print using rich console
+        console = Console()
+        console.print(table)
+
+        data = pd.DataFrame(
+            {
+                "created": [current_time_convert(run.start_time) for run in all_runs],
+                config.metric.name: [run.summary_metrics.get(config.metric.name) for run in all_runs],
+            }
+        )
+
+        mlflow.set_experiment(experiment_id=sweep.info.experiment_id)
+        mlflow.start_run(run_id=sweep.info.run_id)
+
+        fig = plot_metric_vs_time(data, time_col="created", metric_col=config.metric.name)
+        fig.write_html("metric_vs_time.html")
+        mlflow.log_artifact("metric_vs_time.html")
+        Path("metric_vs_time.html").unlink(missing_ok=True)
+
+        fig = plot_parameter_importance_and_correlation(features, metric_name=config.metric.name)
+        fig.write_html("parameter_importance_and_correlation.html")
+        mlflow.log_artifact("parameter_importance_and_correlation.html")
+        Path("parameter_importance_and_correlation.html").unlink(missing_ok=True)

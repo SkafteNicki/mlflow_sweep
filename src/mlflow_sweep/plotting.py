@@ -88,7 +88,7 @@ def plot_parameter_importance_and_correlation(results: dict, metric_name: str = 
             {
                 "Parameter": param,
                 "Importance": stats["importance"],
-                "Correlation (Pearson)": stats["correlation"]["pearson"],
+                "Correlation (Pearson)": stats["pearson"],
             }
         )
     df = pd.DataFrame(data)
