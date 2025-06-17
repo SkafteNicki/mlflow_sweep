@@ -50,7 +50,7 @@ def init_command(config_path: Path) -> None:
         config_path (Path): Path to the sweep configuration file.
 
     """
-    with open(config_path) as file:
+    with Path(config_path).open() as file:
         config = yaml.safe_load(file)
 
     config = SweepConfig(**config)  # validate the config
@@ -115,7 +115,7 @@ def finalize_command(sweep_id: str = "") -> None:
         metric_values = np.array([run.summary_metrics.get(config.metric.name) for run in all_runs])
         parameter_values = {
             param_name: np.array([run.config[param_name]["value"] for run in all_runs])
-            for param_name in config.parameters.keys()
+            for param_name in config.parameters
         }
 
         features = calculate_feature_importance_and_correlation(metric_values, parameter_values)

@@ -13,7 +13,8 @@ def calculate_feature_importance_and_correlation(
 
     Args:
         metric_value (np.ndarray): Array of metric values (e.g., validation loss).
-        parameter_values (dict[str, np.ndarray]): Dictionary where keys are parameter names and values are arrays of parameter values.
+        parameter_values (dict[str, np.ndarray]): Dictionary where keys are parameter names and values are arrays of
+            parameter values.
 
     Returns:
         dict: Dictionary with parameter names as keys and dictionaries containing importance,
@@ -61,7 +62,7 @@ def calculate_feature_importance_and_correlation(
         spearman_corr, _ = spearmanr(data[:, i], metric_value)
         correlations[param] = {"pearson": pearson_corr, "spearman": spearman_corr}
 
-    result = {
+    return {
         k: {
             "importance": float(v),
             "permutation_importance": float(perm_importances[i]),
@@ -70,7 +71,6 @@ def calculate_feature_importance_and_correlation(
         }
         for i, (k, v) in enumerate(zip(parameter_values.keys(), importances))
     }
-    return result
 
 
 def current_time_convert(ts_ms: int) -> str:

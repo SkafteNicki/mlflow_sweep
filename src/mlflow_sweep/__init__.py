@@ -24,7 +24,7 @@ def cli():
         "--sweep-id",
         default="",
         type=str,
-        help="ID of the sweep to start the agent for (optional if not specified will use the most recent initialized sweep)",
+        help="ID of the sweep to run (optional if not specified will use the most recent initialized sweep)",
     )
     def run(sweep_id):
         """Start a sweep agent."""
@@ -35,7 +35,7 @@ def cli():
         "--sweep-id",
         default="",
         type=str,
-        help="ID of the sweep to start the agent for (optional if not specified will use the most recent initialized sweep)",
+        help="ID of the sweep to finalize (optional if not specified will use the most recent initialized sweep)",
     )
     def finalize(sweep_id):
         """Finalize a sweep."""

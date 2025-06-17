@@ -1,5 +1,5 @@
-import os
 from enum import Enum
+from pathlib import Path
 
 import yaml
 from mlflow.entities import Run
@@ -44,9 +44,9 @@ class SweepConfig(BaseModel):
     def from_sweep(cls, sweep: Run) -> "SweepConfig":
         """Create a SweepConfig instance from an MLflow Run object."""
         artifact_uri = sweep.info.artifact_uri.replace("file://", "")
-        config_file_path = os.path.join(artifact_uri, "sweep_config.yaml")
+        config_file_path = Path(artifact_uri) / "sweep_config.yaml"
 
-        with open(config_file_path) as file:
+        with Path.open(config_file_path) as file:
             config = yaml.safe_load(file)
 
         return cls(**config)  # Validate the config

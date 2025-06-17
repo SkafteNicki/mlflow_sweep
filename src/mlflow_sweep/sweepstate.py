@@ -1,6 +1,6 @@
 import json
-import os
 import warnings
+from pathlib import Path
 
 import mlflow
 from mlflow import MlflowClient
@@ -89,8 +89,7 @@ class SweepState:
         if "proposed_parameters.json" not in [a.path for a in self.client.list_artifacts(self.sweep_id)]:
             return []
         artifact_uri = self.client.get_run(self.sweep_id).info.artifact_uri.replace("file://", "")
-        table_path = os.path.join(artifact_uri, "proposed_parameters.json")
-        with open(table_path) as file:
+        table_path = Path(artifact_uri) / "proposed_parameters.json"
+        with Path.open(table_path) as file:
             previous_runs: dict = json.load(file)
-        table_data = [{previous_runs["columns"][i]: row[i] for i in range(len(row))} for row in previous_runs["data"]]
-        return table_data
+        return [{previous_runs["columns"][i]: row[i] for i in range(len(row))} for row in previous_runs["data"]]

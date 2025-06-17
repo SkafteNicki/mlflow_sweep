@@ -7,7 +7,6 @@ from mlflow_sweep.utils import calculate_feature_importance_and_correlation
 @pytest.fixture
 def sample_data():
     """Fixture providing sample data for testing."""
-    np.random.seed(42)  # Ensure reproducibility
     metric = np.array([0.1, 0.2, 0.15, 0.25, 0.3])
     params = {
         "learning_rate": np.array([0.01, 0.02, 0.01, 0.03, 0.02]),
@@ -71,7 +70,6 @@ def test_empty_parameter_set():
 
 def test_single_parameter():
     """Test with a single parameter."""
-    np.random.seed(42)
     metric = np.array([0.1, 0.2, 0.15, 0.25, 0.3])
     params = {"learning_rate": np.array([0.01, 0.02, 0.01, 0.03, 0.02])}
 
@@ -95,7 +93,6 @@ def test_different_length_arrays():
 
 def test_with_constant_parameter():
     """Test behavior when a parameter has constant values."""
-    np.random.seed(42)
     metric = np.array([0.1, 0.2, 0.15, 0.25, 0.3])
     params = {
         "learning_rate": np.array([0.01, 0.02, 0.01, 0.03, 0.02]),

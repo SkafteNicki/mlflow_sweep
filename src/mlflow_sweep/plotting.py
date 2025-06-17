@@ -52,7 +52,7 @@ def plot_metric_vs_time(dataframe, time_col="created", metric_col="accuracy"):
             x=df[time_col],
             y=df["best_so_far"],
             mode="lines+markers",
-            line=dict(color="skyblue"),
+            line={"color": "skyblue"},
             name="Best so far",
             showlegend=False,
         )
@@ -62,8 +62,8 @@ def plot_metric_vs_time(dataframe, time_col="created", metric_col="accuracy"):
     fig.update_layout(
         xaxis_title=time_col.capitalize(),
         yaxis_title=metric_col.capitalize(),
-        title=dict(x=0.5),
-        margin=dict(l=40, r=20, t=40, b=40),
+        title={"x": 0.5},
+        margin={"l": 40, "r": 20, "t": 40, "b": 40},
         height=400,
     )
 
@@ -121,8 +121,8 @@ def plot_parameter_importance_and_correlation(results: dict, metric_name: str = 
         xaxis_title="Score",
         yaxis_title="Config parameter",
         height=400 + 30 * len(df),
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-        margin=dict(l=120, r=20, t=60, b=40),
+        legend={"orientation": "h", "yanchor": "bottom", "y": 1.02, "xanchor": "right", "x": 1},
+        margin={"l": 120, "r": 20, "t": 60, "b": 40},
     )
 
     return fig
