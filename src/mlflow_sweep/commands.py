@@ -94,14 +94,6 @@ def run_command(sweep_id: str = "") -> None:
 
             runstate.save(run_sweep_id)
 
-            # breakpoint()
-            # # Gather result from the run
-            # if config.metric is not None:
-            #     runs = mlflow.search_runs(
-            #         search_all_experiments=True,
-            #         filter_string=f"tags.mlflow.parentRunId = '{sweep.info.run_id}'"
-            #     )
-
 
 def finalize_command(sweep_id: str = "") -> None:
     """Finalize a sweep."""
