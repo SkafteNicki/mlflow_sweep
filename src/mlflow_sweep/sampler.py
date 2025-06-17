@@ -1,9 +1,9 @@
-from mlflow_sweep.models import SweepConfig
-from re import sub
-from mlflow_sweep.sweepstate import SweepState
 import uuid
-
 import warnings
+from re import sub
+
+from mlflow_sweep.models import SweepConfig
+from mlflow_sweep.sweepstate import SweepState
 
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore", category=UserWarning, message="Valid config keys have changed in V2.*")

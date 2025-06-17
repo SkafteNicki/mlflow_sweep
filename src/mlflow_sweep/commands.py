@@ -1,22 +1,24 @@
+import os
+import shutil
+import subprocess
+import tempfile
+import uuid
 from pathlib import Path
+
+import mlflow
+import numpy as np
+import pandas as pd
 import yaml
+from mlflow.entities import Run
+from rich import print as rprint
+from rich.console import Console
+from rich.table import Table
+
 from mlflow_sweep.models import SweepConfig
+from mlflow_sweep.plotting import plot_metric_vs_time, plot_parameter_importance_and_correlation
 from mlflow_sweep.sampler import SweepSampler
 from mlflow_sweep.sweepstate import SweepState
-import mlflow
-from mlflow.entities import Run
-import os
-import subprocess
-from rich import print as rprint
-import uuid
-import tempfile
-import shutil
-import numpy as np
 from mlflow_sweep.utils import calculate_feature_importance_and_correlation, current_time_convert
-from rich.table import Table
-from rich.console import Console
-from mlflow_sweep.plotting import plot_metric_vs_time, plot_parameter_importance_and_correlation
-import pandas as pd
 
 
 def determine_sweep(sweep_id: str) -> Run:
@@ -48,7 +50,7 @@ def init_command(config_path: Path) -> None:
         config_path (Path): Path to the sweep configuration file.
 
     """
-    with open(config_path, "r") as file:
+    with open(config_path) as file:
         config = yaml.safe_load(file)
 
     config = SweepConfig(**config)  # validate the config

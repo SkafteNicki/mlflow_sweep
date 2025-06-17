@@ -1,5 +1,6 @@
 import pytest
 from pydantic import ValidationError
+
 from mlflow_sweep.models import MetricConfig, SweepConfig
 
 

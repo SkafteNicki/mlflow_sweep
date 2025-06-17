@@ -1,7 +1,8 @@
-import typer
-import mlflow
 import random
 import time
+
+import mlflow
+import typer
 
 app = typer.Typer()
 

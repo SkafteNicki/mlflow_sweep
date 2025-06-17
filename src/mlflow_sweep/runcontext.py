@@ -1,6 +1,7 @@
+import os
+
 from mlflow.tracking.context.abstract_context import RunContextProvider
 from mlflow.utils.mlflow_tags import MLFLOW_PARENT_RUN_ID
-import os
 
 
 class SweepContextProvider(RunContextProvider):

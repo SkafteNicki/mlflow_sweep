@@ -1,27 +1,27 @@
+import json
+import os
 import warnings
+
+import mlflow
 from mlflow import MlflowClient
 from mlflow.entities import Run
-import mlflow
-import os
-import json
 
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore", category=UserWarning, message="Valid config keys have changed in V2.*")
-    from sweeps import SweepRun, RunState
+    from sweeps import RunState, SweepRun
 
 
 def status_mapping(mlflow_status: str) -> RunState:
     """Map MLflow run status to SweepRun state."""
     if mlflow_status == "RUNNING":
         return RunState.running
-    elif mlflow_status == "SCHEDULED":
+    if mlflow_status == "SCHEDULED":
         return RunState.pending
-    elif mlflow_status == "FINISHED":
+    if mlflow_status == "FINISHED":
         return RunState.finished
-    elif mlflow_status == "FAILED":
+    if mlflow_status == "FAILED":
         return RunState.failed
-    else:
-        return RunState.killed
+    return RunState.killed
 
 
 class ExtendedSweepRun(SweepRun):
@@ -90,7 +90,7 @@ class SweepState:
             return []
         artifact_uri = self.client.get_run(self.sweep_id).info.artifact_uri.replace("file://", "")
         table_path = os.path.join(artifact_uri, "proposed_parameters.json")
-        with open(table_path, "r") as file:
+        with open(table_path) as file:
             previous_runs: dict = json.load(file)
         table_data = [{previous_runs["columns"][i]: row[i] for i in range(len(row))} for row in previous_runs["data"]]
         return table_data

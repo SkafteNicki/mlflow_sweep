@@ -1,8 +1,9 @@
+import datetime
+
 import numpy as np
+from scipy.stats import pearsonr, spearmanr
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.inspection import permutation_importance
-from scipy.stats import pearsonr, spearmanr
-import datetime
 
 
 def calculate_feature_importance_and_correlation(

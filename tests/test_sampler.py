@@ -1,10 +1,11 @@
 import json
+from unittest.mock import MagicMock, mock_open, patch
+
 import pytest
-from unittest.mock import MagicMock, patch, mock_open
 import sweeps
 
 from mlflow_sweep.models import SweepConfig
-from mlflow_sweep.sampler import SweepProcessor
+from mlflow_sweep.sampler import SweepSampler
 
 
 @pytest.fixture
@@ -28,7 +29,7 @@ def sweep_config():
 
 class TestSweepProcessor:
     def test_init(self, sweep_config, mock_parent_run):
-        processor = SweepProcessor(sweep_config, mock_parent_run)
+        processor = SweepSampler(sweep_config, mock_parent_run)
         assert processor.config == sweep_config
         assert processor.parent_sweep == mock_parent_run
 
@@ -36,7 +37,7 @@ class TestSweepProcessor:
     def test_load_previous_runs_no_data(self, mock_list_artifacts, mock_parent_run, sweep_config):
         mock_list_artifacts.return_value = []
 
-        processor = SweepProcessor(sweep_config, mock_parent_run)
+        processor = SweepSampler(sweep_config, mock_parent_run)
         result = processor.load_previous_runs()
 
         assert result == []
@@ -63,7 +64,7 @@ class TestSweepProcessor:
         }
         mock_file.return_value.__enter__.return_value.read.return_value = json.dumps(mock_data)
 
-        processor = SweepProcessor(sweep_config, mock_parent_run)
+        processor = SweepSampler(sweep_config, mock_parent_run)
         result = processor.load_previous_runs()
 
         assert len(result) == 2
@@ -72,7 +73,7 @@ class TestSweepProcessor:
         assert result[0].config["batch_size"]["value"] == 32
         assert result[0].state == sweeps.RunState.finished
 
-    @patch.object(SweepProcessor, "load_previous_runs")
+    @patch.object(SweepSampler, "load_previous_runs")
     @patch("sweeps.next_run")
     def test_propose_next_under_cap(self, mock_next_run, mock_load_previous, sweep_config, mock_parent_run):
         mock_load_previous.return_value = []
@@ -82,20 +83,20 @@ class TestSweepProcessor:
         mock_config.config = {"learning_rate": {"value": 0.01}, "batch_size": {"value": 32}}
         mock_next_run.return_value = mock_config
 
-        processor = SweepProcessor(sweep_config, mock_parent_run)
+        processor = SweepSampler(sweep_config, mock_parent_run)
         command, params = processor.propose_next()  # ty: ignore
 
         assert command == "python train.py --lr=0.01 --batch=32"
         assert params == {"learning_rate": 0.01, "batch_size": 32, "run": 1}
         mock_next_run.assert_called_once_with(sweep_config=sweep_config.model_dump(), runs=[])
 
-    @patch.object(SweepProcessor, "load_previous_runs")
+    @patch.object(SweepSampler, "load_previous_runs")
     def test_propose_next_at_cap(self, mock_load_previous, sweep_config, mock_parent_run):
         # Create 4 mock runs (equal to run cap)
         mock_runs = [MagicMock() for _ in range(4)]
         mock_load_previous.return_value = mock_runs
 
-        processor = SweepProcessor(sweep_config, mock_parent_run)
+        processor = SweepSampler(sweep_config, mock_parent_run)
         result = processor.propose_next()
 
         assert result is None  # Should return None when run cap is reached
@@ -105,5 +106,5 @@ class TestSweepProcessor:
         template = "python train.py --lr=${learning_rate} --batch=${batch_size}"
         expected = "python train.py --lr=0.01 --batch=32"
 
-        result = SweepProcessor.replace_dollar_signs(template, parameters)
+        result = SweepSampler.replace_dollar_signs(template, parameters)
         assert result == expected

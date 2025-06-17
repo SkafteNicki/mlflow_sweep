@@ -1,6 +1,6 @@
+import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-import pandas as pd
 
 
 def plot_metric_vs_time(dataframe, time_col="created", metric_col="accuracy"):
