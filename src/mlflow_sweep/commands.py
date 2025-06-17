@@ -1,7 +1,7 @@
 from pathlib import Path
 import yaml
 from mlflow_sweep.models import SweepConfig
-from mlflow_sweep.sampler import SweepProcessor
+from mlflow_sweep.sampler import SweepSampler
 from mlflow_sweep.sweepstate import SweepState
 import mlflow
 from mlflow.entities import Run
@@ -9,6 +9,30 @@ import os
 import subprocess
 from rich import print as rprint
 import uuid
+import tempfile
+import shutil
+
+
+def determine_sweep(sweep_id: str) -> Run:
+    """Determine the sweep to use.
+    If a sweep_id is provided, it will be used. Otherwise, the most recent sweep will be selected."""
+
+    sweeps: list[Run] = mlflow.search_runs(  # ty: ignore[invalid-assignment]
+        search_all_experiments=True,
+        filter_string="tag.sweep = 'True'",
+        output_format="list",
+    )
+
+    if sweep_id:
+        for sweep in sweeps:
+            if sweep.info.run_id == sweep_id:
+                break
+        else:
+            raise ValueError(f"No sweep found with sweep_id: {sweep_id}")
+    else:
+        sweep = max(sweeps, key=lambda x: x.info.start_time)  # Get the most recent sweep
+
+    return sweep
 
 
 def init_command(config_path: Path) -> None:
@@ -28,71 +52,48 @@ def init_command(config_path: Path) -> None:
     mlflow.set_experiment(config.experiment_name)
     run = mlflow.start_run(run_name=config.sweep_name)
     mlflow.set_tag("sweep", True)
-    mlflow.log_artifact(str(config_path))
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tmp_config_path = Path(tmpdir) / "sweep_config.yaml"
+        shutil.copy(config_path, tmp_config_path)
+        mlflow.log_artifact(str(tmp_config_path))
 
     rprint(f"[bold green]Sweep initialized with ID: {run.info.run_id}[/bold green]")
 
 
 def run_command(sweep_id: str = "") -> None:
     """Run a sweep agent."""
-    sweeps: list[Run] = mlflow.search_runs(  # ty: ignore[invalid-assignment]
-        search_all_experiments=True,
-        filter_string="tag.sweep = 'True'",
-        output_format="list",
-    )
+    sweep = determine_sweep(sweep_id)
 
-    if sweep_id:
-        for sweep in sweeps:
-            if sweep.info.run_id == sweep_id:
-                break
-        else:
-            raise ValueError(f"No sweep found with sweep_id: {sweep_id}")
-    else:
-        sweep = max(sweeps, key=lambda x: x.info.start_time)  # Get the most recent sweep
-
-    sweep_config_path = [
-        a.path for a in mlflow.artifacts.list_artifacts(run_id=sweep.info.run_id) if a.path.endswith(".yaml")
-    ][0]
-    artifact_uri = sweep.info.artifact_uri.replace("file://", "")  # Remove the 'file://' prefix
-    config_file_path = os.path.join(artifact_uri, sweep_config_path)
-
-    with open(config_file_path, "r") as file:
-        config = yaml.safe_load(file)
-
-    config = SweepConfig(**config)
-    sweep_processor = SweepProcessor(config, parent_sweep=sweep)
-
+    config = SweepConfig.from_sweep(sweep)
     runstate = SweepState(sweep_id=sweep.info.run_id)
+    sweep_processor = SweepSampler(config, runstate)
 
     mlflow.set_experiment(experiment_id=sweep.info.experiment_id)
-    with mlflow.start_run(run_id=sweep.info.run_id):
-        # Set an environment variable to link runs in the sweep
-        # This will be picked up by the custom SweepRunContextProvider
-        global_env = os.environ.copy()
-        global_env["SWEEP_PARENT_RUN_ID"] = sweep.info.run_id
-        global_env["SWEEP_AGENT_ID"] = str(uuid.uuid4())  # Unique ID for this agent
+    mlflow.start_run(run_id=sweep.info.run_id)
 
-        while True:
-            output = sweep_processor.propose_next()
-            if output is None:
-                rprint("[bold red]No more runs can be proposed or run cap reached.[/bold red]")
-                break
-            command, data = output
-            table_data = {k: [str(v)] for k, v in data.items()}
-            mlflow.log_table(
-                data=table_data,
-                artifact_file="proposed_parameters.json",
-            )
-            rprint(f"[bold blue]Executed command:[/bold blue] \n[italic]{command}[/italic]")
-            rprint(50 * "─")
-            local_env = global_env.copy()
-            run_sweep_id = str(uuid.uuid4())
-            # Unique ID for this run, redundant to standard mlflow but something we can track without user involvement
-            local_env["SWEEP_RUN_ID"] = run_sweep_id
-            subprocess.run(command, shell=True, env=local_env, check=True)
-            rprint(50 * "─")
+    # Set an environment variable to link runs in the sweep
+    # This will be picked up by the custom SweepRunContextProvider
+    global_env = os.environ.copy()
+    global_env["SWEEP_PARENT_RUN_ID"] = sweep.info.run_id
+    global_env["SWEEP_AGENT_ID"] = str(uuid.uuid4())  # Unique ID for this agent
 
-            runstate.save(run_sweep_id)
+    while True:
+        output = sweep_processor.propose_next()
+        if output is None:
+            rprint("[bold red]No more runs can be proposed or run cap reached.[/bold red]")
+            break
+        command, data = output
+        mlflow.log_table(
+            data={k: [v] for k, v in data.items()},
+            artifact_file="proposed_parameters.json",
+        )
+        rprint(f"[bold blue]Executed command:[/bold blue] \n[italic]{command}[/italic]")
+        rprint(50 * "─")
+        local_env = global_env.copy()
+        local_env["SWEEP_RUN_ID"] = data["sweep_run_id"]
+        subprocess.run(command, shell=True, env=local_env, check=True)
+        rprint(50 * "─")
 
 
 def finalize_command(sweep_id: str = "") -> None:

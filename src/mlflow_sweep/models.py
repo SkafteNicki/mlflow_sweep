@@ -1,6 +1,9 @@
 from pydantic import BaseModel, Field, ConfigDict
 from enum import Enum
 from mlflow.utils.name_utils import _generate_random_name
+from mlflow.entities import Run
+import yaml
+import os
 
 
 class SweepMethodEnum(str, Enum):
@@ -35,3 +38,14 @@ class SweepConfig(BaseModel):
             self.experiment_name = "Default"
         if self.sweep_name == "":
             self.sweep_name = "sweep-" + _generate_random_name()
+
+    @classmethod
+    def from_sweep(cls, sweep: Run) -> "SweepConfig":
+        """Create a SweepConfig instance from an MLflow Run object."""
+        artifact_uri = sweep.info.artifact_uri.replace("file://", "")
+        config_file_path = os.path.join(artifact_uri, "sweep_config.yaml")
+
+        with open(config_file_path, "r") as file:
+            config = yaml.safe_load(file)
+
+        return cls(**config)  # Validate the config
