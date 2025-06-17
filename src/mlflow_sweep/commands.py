@@ -2,11 +2,13 @@ from pathlib import Path
 import yaml
 from mlflow_sweep.models import SweepConfig
 from mlflow_sweep.sampler import SweepProcessor
+from mlflow_sweep.sweepstate import SweepState
 import mlflow
 from mlflow.entities import Run
 import os
 import subprocess
 from rich import print as rprint
+import uuid
 
 
 def init_command(config_path: Path) -> None:
@@ -60,12 +62,15 @@ def run_command(sweep_id: str = "") -> None:
     config = SweepConfig(**config)
     sweep_processor = SweepProcessor(config, parent_sweep=sweep)
 
+    runstate = SweepState(sweep_id=sweep.info.run_id)
+
     mlflow.set_experiment(experiment_id=sweep.info.experiment_id)
     with mlflow.start_run(run_id=sweep.info.run_id):
         # Set an environment variable to link runs in the sweep
         # This will be picked up by the custom SweepRunContextProvider
-        env = os.environ.copy()
-        env["SWEEP_PARENT_RUN_ID"] = sweep.info.run_id
+        global_env = os.environ.copy()
+        global_env["SWEEP_PARENT_RUN_ID"] = sweep.info.run_id
+        global_env["SWEEP_AGENT_ID"] = str(uuid.uuid4())  # Unique ID for this agent
 
         while True:
             output = sweep_processor.propose_next()
@@ -80,8 +85,22 @@ def run_command(sweep_id: str = "") -> None:
             )
             rprint(f"[bold blue]Executed command:[/bold blue] \n[italic]{command}[/italic]")
             rprint(50 * "─")
-            subprocess.run(command, shell=True, env=env, check=True)
+            local_env = global_env.copy()
+            run_sweep_id = str(uuid.uuid4())
+            # Unique ID for this run, redundant to standard mlflow but something we can track without user involvement
+            local_env["SWEEP_RUN_ID"] = run_sweep_id
+            subprocess.run(command, shell=True, env=local_env, check=True)
             rprint(50 * "─")
+
+            runstate.save(run_sweep_id)
+
+            # breakpoint()
+            # # Gather result from the run
+            # if config.metric is not None:
+            #     runs = mlflow.search_runs(
+            #         search_all_experiments=True,
+            #         filter_string=f"tags.mlflow.parentRunId = '{sweep.info.run_id}'"
+            #     )
 
 
 def finalize_command(sweep_id: str = "") -> None:

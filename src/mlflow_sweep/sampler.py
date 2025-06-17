@@ -43,6 +43,7 @@ class SweepProcessor:
         previous_runs = self.load_previous_runs()
         if len(previous_runs) >= self.config.run_cap:
             return None  # Stop proposing new runs if the cap is reached
+
         sweep_config = sweep_module.next_run(sweep_config=self.config.model_dump(), runs=previous_runs)
         if sweep_config is None:
             return None  # Grid search is exhausted or no more runs can be proposed
