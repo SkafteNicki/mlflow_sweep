@@ -14,6 +14,7 @@ repos:
       - id: end-of-file-fixer
       - id: trailing-whitespace
       - id: check-yaml
+        exclude: mkdocs.yaml
       - id: check-toml
       - id: check-docstring-first
       - id: check-executables-have-shebangs
