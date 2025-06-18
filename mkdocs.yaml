@@ -1,0 +1,75 @@
+site_name: MLFlow Sweep
+docs_dir: docs
+site_dir: site
+repo_url: https://github.com/SkafteNicki/mlflow_sweep
+
+theme:
+  language: en
+  name: material
+  icon:
+    repo: fontawesome/brands/github
+  palette:
+    # Palette toggle for light mode
+    - scheme: default
+      primary: custom
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+
+    # Palette toggle for dark mode
+    - scheme: slate
+      primary: custom
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.instant
+    - navigation.expand
+    - toc.integrate
+    - content.code.copy
+    - content.code.annotate
+    - navigation.footer
+    - search.suggest
+    - search.highlight
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - attr_list
+  - md_in_html
+  - admonition
+  - pymdownx.details
+  - pymdownx.tabbed:
+      alternate_style: true
+  - def_list
+  - tables
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.superfences
+
+plugins:
+  - search
+  - glightbox
+  - mkdocstrings
+
+extra:
+  social:
+    - icon: material/email
+      link: mailto:skaftenicki@gmail.com
+    - icon: material/web
+      link: https://skaftenicki.github.io/
+    - icon: fontawesome/brands/github
+      link: https://github.com/SkafteNicki
+
+extra_css:
+  - stylesheets/extra.css
+
+nav:
+  - 🚀 Getting Started: quickstart.md
+  - 📄 Configuration: configuration.md
+  - 📘 API reference: api.md
