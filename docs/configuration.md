@@ -1,5 +1,5 @@
-The core object that needs to be created to use this package is a config file writing in YAML
-format that contains the configuration for the hyperparameter optimization process. MLflow sweep utilizes this
+The core object that needs to be created to use this package is a config file writing in YAML format that contains the
+configuration for the hyperparameter optimization process. MLflow sweep utilizes this
 [sweep](https://github.com/wandb/sweeps) library to sample hyperparameters. This package is developed by Weights and
 Biases and Mlflow sweeps configuration format is therefore very similar to the one used by Weights and Biases. This
 documentation part is therefore partly taken from [here](https://docs.wandb.ai/guides/sweeps/).
