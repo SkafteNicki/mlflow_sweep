@@ -3,7 +3,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 
 
-def plot_metric_vs_time(dataframe, time_col="created", metric_col="accuracy"):
+def plot_metric_vs_time(dataframe: pd.DataFrame, time_col: str = "created", metric_col: str = "accuracy") -> go.Figure:
     """
     Plots a metric vs. time using Plotly, with a line showing the best-so-far metric value.
 
@@ -70,7 +70,7 @@ def plot_metric_vs_time(dataframe, time_col="created", metric_col="accuracy"):
     return fig
 
 
-def plot_parameter_importance_and_correlation(results: dict, metric_name: str = "accuracy"):
+def plot_parameter_importance_and_correlation(results: dict, metric_name: str = "accuracy") -> go.Figure:
     """
     Plot parameter importance and correlation with respect to a metric using Plotly.
 
