@@ -7,8 +7,15 @@ from mlflow import MlflowClient
 from mlflow.entities import Run
 
 with warnings.catch_warnings():
+    # sweep dependency still uses V1 API of pydantic, so we need to ignore the warning about config keys
     warnings.filterwarnings("ignore", category=UserWarning, message="Valid config keys have changed in V2.*")
     from sweeps import RunState, SweepRun
+
+    class ExtendedSweepRun(SweepRun):
+        """Extended SweepRun to include additional information."""
+
+        id: str
+        start_time: int
 
 
 def status_mapping(mlflow_status: str) -> RunState:
@@ -22,13 +29,6 @@ def status_mapping(mlflow_status: str) -> RunState:
     if mlflow_status == "FAILED":
         return RunState.failed
     return RunState.killed
-
-
-class ExtendedSweepRun(SweepRun):
-    """Extended SweepRun to include additional information."""
-
-    id: str
-    start_time: int
 
 
 class SweepState:
