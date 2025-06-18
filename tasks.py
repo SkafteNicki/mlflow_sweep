@@ -2,6 +2,12 @@ from invoke import Context, task
 
 
 @task
+def docs(ctx: Context) -> None:
+    """Build the documentation."""
+    ctx.run("uv run mkdocs serve")
+
+
+@task
 def clean(ctx: Context) -> None:
     """Clean up build artifacts."""
     ctx.run("rm -rf build dist *.egg-info", echo=True, pty=True)
