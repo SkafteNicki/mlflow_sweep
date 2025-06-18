@@ -1,5 +1,26 @@
 The core object that needs to be created to use this package is a config file writing in YAML
-format that contains the configuration for the hyperparameter optimization process.
+format that contains the configuration for the hyperparameter optimization process. MLflow sweep utilizes this
+[sweep](https://github.com/wandb/sweeps) library to sample hyperparameters. This package is developed by Weights and
+Biases and Mlflow sweeps configuration format is therefore very similar to the one used by Weights and Biases. This
+documentation part is therefore partly taken from [here](https://docs.wandb.ai/guides/sweeps/).
+
+??? "Difference to Weights and Biases"
+
+    The main difference to the Weights and Biases sweep configuration is the following:
+
+    - The `command` field is a single string where parameters are specified using the `${parameter_name}` syntax. In
+        Weights and Biases, the `command` field consist of a list of macros that determine how the command is run
+        and parameters are passed to the command.
+
+    - The `experiment_name` and `sweep_name` fields are used to create the experiment and sweep in MLflow. In Weights
+        and Biases, this more or less corresponds to the `project` and `name` fields in the sweep.
+
+    - Weights and Biases have a `entity` field for teams running sweeps, this is not present in MLflow sweeps.
+
+    - Weights and Biases have a `early_terminate` field to stop runs that are not performing well, this is not present
+        in MLflow sweeps (at the moment, will be added in the future).
+
+A minimal configuration file looks like this:
 
 ```yaml
 command:                      # Command to run the training script with parameters
@@ -106,3 +127,22 @@ a grid of values.
 === "Log Uniform"
 
     something something
+
+
+| Value for distribution key | Description                                                                                                                                                       |
+|----------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `constant`                 | Constant distribution. Must specify the constant value (`value`) to use.                                                                                          |
+| `categorical`              | Categorical distribution. Must specify all valid values (`values`) for this hyperparameter.                                                                       |
+| `int_uniform`              | Discrete uniform distribution on integers. Must specify `max` and `min` as integers.                                                                              |
+| `uniform`                  | Continuous uniform distribution. Must specify `max` and `min` as floats.                                                                                          |
+| `q_uniform`                | Quantized uniform distribution. Returns `round(X / q) * q` where `X` is uniform. `q` defaults to 1.                                                               |
+| `log_uniform`              | Log-uniform distribution. Returns a value `X` between `exp(min)` and `exp(max)` such that the natural logarithm is uniformly distributed between `min` and `max`. |
+| `log_uniform_values`       | Log-uniform distribution. Returns a value `X` between `min` and `max` such that `log(X)` is uniformly distributed between `log(min)` and `log(max)`.              |
+| `q_log_uniform`            | Quantized log uniform. Returns `round(X / q) * q` where `X` is `log_uniform`. `q` defaults to 1.                                                                  |
+| `q_log_uniform_values`     | Quantized log uniform. Returns `round(X / q) * q` where `X` is `log_uniform_values`. `q` defaults to 1.                                                           |
+| `inv_log_uniform`          | Inverse log uniform distribution. Returns `X`, where `log(1/X)` is uniformly distributed between `min` and `max`.                                                 |
+| `inv_log_uniform_values`   | Inverse log uniform distribution. Returns `X`, where `log(1/X)` is uniformly distributed between `log(1/max)` and `log(1/min)`.                                   |
+| `normal`                   | Normal distribution. Return value is normally distributed with mean `mu` (default 0) and standard deviation `sigma` (default 1).                                  |
+| `q_normal`                 | Quantized normal distribution. Returns `round(X / q) * q` where `X` is `normal`. `q` defaults to 1.                                                               |
+| `log_normal`               | Log normal distribution. Returns a value `X` such that the natural logarithm `log(X)` is normally distributed with mean `mu` (default 0) and `sigma` (default 1). |
+| `q_log_normal`             | Quantized log normal distribution. Returns `round(X / q) * q` where `X` is `log_normal`. `q` defaults to 1.                                                       |
