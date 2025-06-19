@@ -27,11 +27,42 @@ experience for MLflow users. It is designed to be easy to use and integrate with
 
 === "pip"
 
-    The
+    ```bash
+    pip install mlflow-sweep
+    ```
 
-```bash
-pip install mlflow-sweep
+=== "uv"
+
+    ```bash
+    uv add mlflow-sweep
+    ```
+
+And that's it. You should now be able to see an additional `sweep` command in the MLflow CLI.
+
+```txt
+❯ mlflow --help
+Usage: mlflow [OPTIONS] COMMAND [ARGS]...
+
+Options:
+  --version  Show the version and exit.
+  --help     Show this message and exit.
+
+Commands:
+  artifacts    Upload, list, and download artifacts from an MLflow...
+  db           Commands for managing an MLflow tracking database.
+  deployments  Deploy MLflow models to custom targets.
+  doctor       Prints out useful information for debugging issues with MLflow.
+  experiments  Manage experiments.
+  gc           Permanently delete runs in the `deleted` lifecycle stage.
+  models       Deploy MLflow models locally.
+  run          Run an MLflow project from the given URI.
+  runs         Manage runs.
+  sagemaker    Serve models on SageMaker.
+  server       Run the MLflow tracking server.
+  sweep        MLflow Sweep CLI commands.            <-- this is the new command
 ```
+
+To learn more about the `sweep` command, visit the following sections of the documentation.
 
 <div class="grid cards" markdown>
 
