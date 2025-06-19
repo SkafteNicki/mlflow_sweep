@@ -31,9 +31,7 @@ def calculate_feature_importance_and_correlation(
         >>> result = calculate_feature_importance_and_correlation(metric, params)
         >>> sorted(result.keys())
         ['batch_size', 'learning_rate']
-        >>> all(k in result['learning_rate'] for k in ['importance', 'permutation_importance', 'correlation'])
-        True
-        >>> all(k in result['learning_rate']['correlation'] for k in ['pearson', 'spearman'])
+        >>> all(k in result['learning_rate'] for k in ['importance', 'permutation_importance', 'pearson', 'spearman'])
         True
     """
     # Check for empty parameter set
