@@ -1,6 +1,7 @@
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
 
 def plot_metric_vs_time(dataframe: pd.DataFrame, time_col: str = "created", metric_col: str = "accuracy") -> go.Figure:
@@ -44,6 +45,7 @@ def plot_metric_vs_time(dataframe: pd.DataFrame, time_col: str = "created", metr
         color=metric_col,
         title=f"{metric_col} v. {time_col}",
         labels={time_col: time_col.capitalize(), metric_col: metric_col.capitalize()},
+        size=[10] * len(df),  # Fixed size for all points
     )
 
     # Add line for best-so-far
@@ -73,13 +75,14 @@ def plot_metric_vs_time(dataframe: pd.DataFrame, time_col: str = "created", metr
 def plot_parameter_importance_and_correlation(results: dict, metric_name: str = "accuracy") -> go.Figure:
     """
     Plot parameter importance and correlation with respect to a metric using Plotly.
+    Creates a 2x2 grid with separate plots for each score type.
 
     Args:
         results (dict): Output from calculate_feature_importance_and_correlation().
         metric_name (str): Name of the metric (e.g., "accuracy", "loss").
 
     Returns:
-        plotly.graph_objects.Figure: Interactive bar plot figure.
+        plotly.graph_objects.Figure: Interactive 2x2 grid figure of bar plots.
     """
     # Convert the results dict to a DataFrame for easier plotting
     data = []
@@ -88,41 +91,81 @@ def plot_parameter_importance_and_correlation(results: dict, metric_name: str = 
             {
                 "Parameter": param,
                 "Importance": stats["importance"],
+                "Permutation Importance": stats["permutation_importance"],
                 "Correlation (Pearson)": stats["pearson"],
+                "Correlation (Spearman)": stats["spearman"],
             }
         )
     df = pd.DataFrame(data)
     df.sort_values("Importance", ascending=False, inplace=True)
 
-    # Bar plot with grouped Importance and Correlation
-    fig = go.Figure()
-
-    # Importance bars (blue)
-    fig.add_trace(
-        go.Bar(x=df["Importance"], y=df["Parameter"], orientation="h", name="Importance", marker_color="royalblue")
+    # Create a 2x2 subplot figure
+    fig = make_subplots(
+        rows=2,
+        cols=2,
+        subplot_titles=[
+            "Parameter Importance",
+            "Pearson Correlation",
+            "Spearman Correlation",
+            "Permutation Importance",
+        ],
     )
 
-    # Correlation bars (green/red based on sign)
+    # Define common properties
+    param_order = df["Parameter"].tolist()
+
+    # 1. Importance plot (top-left)
+    fig.add_trace(
+        go.Bar(x=df["Importance"], y=df["Parameter"], orientation="h", marker_color="royalblue"), row=1, col=1
+    )
+
+    # 2. Pearson correlation plot (top-right)
     fig.add_trace(
         go.Bar(
             x=df["Correlation (Pearson)"],
             y=df["Parameter"],
             orientation="h",
-            name="Correlation (Pearson)",
             marker_color=["seagreen" if v >= 0 else "crimson" for v in df["Correlation (Pearson)"]],
-            opacity=0.6,
-        )
+        ),
+        row=1,
+        col=2,
     )
 
-    # Layout
+    # 3. Spearman correlation plot (bottom-left)
+    fig.add_trace(
+        go.Bar(
+            x=df["Correlation (Spearman)"],
+            y=df["Parameter"],
+            orientation="h",
+            marker_color=["seagreen" if v >= 0 else "crimson" for v in df["Correlation (Spearman)"]],
+        ),
+        row=2,
+        col=1,
+    )
+
+    # 4. Permutation importance plot (bottom-right)
+    fig.add_trace(
+        go.Bar(x=df["Permutation Importance"], y=df["Parameter"], orientation="h", marker_color="purple"), row=2, col=2
+    )
+
+    # Update layout
     fig.update_layout(
-        title=f"Parameter importance with respect to {metric_name}",
-        barmode="overlay",
-        xaxis_title="Score",
-        yaxis_title="Config parameter",
-        height=400 + 30 * len(df),
+        title=f"Parameter Analysis for {metric_name}",
+        height=max(600, 300 + 30 * len(df)),
+        width=1000,
+        showlegend=True,
         legend={"orientation": "h", "yanchor": "bottom", "y": 1.02, "xanchor": "right", "x": 1},
-        margin={"l": 120, "r": 20, "t": 60, "b": 40},
     )
 
+    # Update axes
+    fig.update_xaxes(title_text="Importance Score", row=1, col=1)
+    fig.update_xaxes(title_text="Pearson Correlation", row=1, col=2)
+    fig.update_xaxes(title_text="Spearman Correlation", row=2, col=1)
+    fig.update_xaxes(title_text="Permutation Importance", row=2, col=2)
+
+    # Ensure consistent y-axis ordering across all subplots
+    for i in range(1, 3):
+        for j in range(1, 3):
+            fig.update_yaxes(categoryorder="array", categoryarray=param_order, row=i, col=j)
+    fig.update_layout(showlegend=False)
     return fig
