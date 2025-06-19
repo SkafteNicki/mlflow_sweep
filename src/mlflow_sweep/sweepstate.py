@@ -44,7 +44,7 @@ class SweepState:
         self.sweep_id = sweep_id
         self.client = MlflowClient()
 
-    def get_all(self) -> list[ExtendedSweepRun]:
+    def get_all(self, with_metric: str = "") -> list[ExtendedSweepRun]:
         """Retrieve all SweepRuns associated with the sweep_id."""
         mlflow_runs: list[Run] = mlflow.search_runs(  # ty: ignore[invalid-assignment]
             search_all_experiments=True,
@@ -52,10 +52,25 @@ class SweepState:
             output_format="list",
         )
         parameters = self.get_parameters()
+        if with_metric != "":
+            metric_history = []
+            for run in mlflow_runs:
+                metric_history.append(
+                    (
+                        run.data.tags.get("mlflow.sweepRunId"),
+                        self.client.get_metric_history(run.info.run_id, key=with_metric),
+                    )
+                )
+            metric_history_sorted = sorted(metric_history, key=lambda x: x[0])
 
         mlflow_runs_sorted = sorted(mlflow_runs, key=lambda run: run.data.tags.get("mlflow.sweepRunId"))
         parameters_sorted = sorted(parameters, key=lambda x: x["sweep_run_id"])
 
+        if with_metric != "":
+            return [
+                self.convert_from_mlflow_runinfo_to_sweep_run(run, params, metrics)
+                for run, params, metrics in zip(mlflow_runs_sorted, parameters_sorted, metric_history_sorted)
+            ]
         return [
             self.convert_from_mlflow_runinfo_to_sweep_run(run, params)
             for run, params in zip(mlflow_runs_sorted, parameters_sorted)
@@ -92,7 +107,7 @@ class SweepState:
         )
 
     @staticmethod
-    def convert_from_mlflow_runinfo_to_sweep_run(mlflow_run: Run, params: dict) -> ExtendedSweepRun:
+    def convert_from_mlflow_runinfo_to_sweep_run(mlflow_run: Run, params: dict, metrics: list = []) -> ExtendedSweepRun:
         """Convert an MLflow Run to a SweepRun.
 
         Args:
@@ -108,6 +123,7 @@ class SweepState:
             id=mlflow_run.info.run_id,
             name=mlflow_run.info.run_name,
             summaryMetrics=mlflow_run.data.metrics,  # ty: ignore[unknown-argument]
+            history=metrics,
             config=params,
             state=status_mapping(mlflow_run.info.status),
             start_time=mlflow_run.info.start_time,
