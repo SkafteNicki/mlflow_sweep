@@ -20,9 +20,6 @@ documentation part is therefore partly taken from [here](https://docs.wandb.ai/g
     - Weights and Biases have a `early_terminate` field to stop runs that are not performing well, this is not present
         in MLflow sweeps (at the moment, will be added in the future).
 
-    - Weights and Biases support three methods for hyperparameter optimization: `random`, `grid`, and `bayesian`.
-        MLflow sweeps currently only support `random` and `grid`.
-
 A minimal configuration file looks like this:
 
 ```yaml
@@ -109,18 +106,12 @@ In the same way, depending on how you pass parameters to your script you should 
     command: uv run example.py learning_rate=${learning_rate} batch_size=${batch_size}
     ```
 
-Currently, there are a couple of standard ways to pass parameters to your script, that we do not support yet:
-
-* Environment variables: if you script loads in hyperparameters from environment variables, then this is not supported.
-
-* JSON file: if you script loads in hyperparameters from a JSON file, then this is not supported.
-
-
 ## Method configuration
 
-Currently, MLflow sweep supports two methods for hyperparameter optimization: `random` and `grid`. The `random` method
-samples hyperparameters randomly from the specified distributions, while the `grid` method samples hyperparameters from
-a grid of values.
+Currently, MLflow sweep supports three methods for hyperparameter optimization: `bayes`, `random`, and `grid`. The
+`bayes` method uses Bayesian optimization to sample hyperparameters, which is a more efficient way to explore the
+hyperparameter space. The `random` method samples hyperparameters randomly from the specified distributions, while
+the `grid` method samples hyperparameters from a grid of values.
 
 ## Metric configuration
 
@@ -248,3 +239,38 @@ Here are examples of how to configure common hyperparameters:
         min: 0.0
         max: 0.5
     ```
+
+## Special cases
+
+* If you have hyperparameters that are boolean values, most commonly the syntax for providing these as arguments would
+  be `--hyperparameter` or `--no-hyperparameter`. In this case, you can use the `categorical` distribution with two
+  strings:
+
+  ```yaml
+  command:
+    uv run example.py ${hyperparameter}
+  parameters:
+    hyperparameter:
+      distribution: categorical
+      values: ["--hyperparameter", "--no-hyperparameter"]
+  ```
+
+* If you have hyperparameters which is loaded into your script as environment variables, you can just extend the
+  `command` field to first set the environment variables and then run the script:
+
+  ```yaml
+  command: |
+    export HYPERPARAMETER=${hyperparameter} &&
+    uv run example.py --learning-rate ${learning_rate} --batch-size ${batch_size}
+  parameters:
+    hyperparameter:
+      distribution: categorical
+      values: ["value1", "value2"]
+    learning_rate:
+      distribution: log_uniform
+      min: 1e-4
+      max: 1e-2
+    batch_size:
+      distribution: categorical
+      values: [16, 32, 64, 128]
+  ```

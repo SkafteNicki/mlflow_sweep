@@ -11,12 +11,20 @@ with warnings.catch_warnings():
 
 
 class SweepSampler:
+    """Sampler for proposing new runs in a sweep based on the provided configuration and state.
+
+    Args:
+        config (SweepConfig): The sweep configuration containing the command and parameters.
+        sweepstate (SweepState): Class managing the state of the sweep, including previous runs and metrics.
+    """
+
     def __init__(self, config: SweepConfig, sweepstate: SweepState) -> None:
         self.config = config
         self.sweepstate = sweepstate
 
     def propose_next(self) -> tuple[str, dict] | None:
-        previous_runs = self.sweepstate.get_all()
+        """Propose the next run command and parameters based on the sweep configuration and state."""
+        previous_runs = self.sweepstate.get_all(with_metric=self.config.metric.name if self.config.metric else "")
         if len(previous_runs) >= self.config.run_cap:
             return None  # Stop proposing new runs if the cap is reached
 

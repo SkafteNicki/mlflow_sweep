@@ -1,3 +1,4 @@
+import warnings
 from enum import Enum
 from pathlib import Path
 
@@ -6,12 +7,24 @@ from mlflow.entities import Run
 from mlflow.utils.name_utils import _generate_random_name
 from pydantic import BaseModel, ConfigDict, Field
 
+with warnings.catch_warnings():
+    # sweep dependency still uses V1 API of pydantic, so we need to ignore the warning about config keys
+    warnings.filterwarnings("ignore", category=UserWarning, message="Valid config keys have changed in V2.*")
+    from sweeps import SweepRun
+
+    class ExtendedSweepRun(SweepRun):
+        """Extended SweepRun to include additional information."""
+
+        id: str
+        start_time: int
+
 
 class SweepMethodEnum(str, Enum):
     """Enumeration for sweep methods."""
 
     grid = "grid"
     random = "random"
+    bayes = "bayes"
 
 
 class GoalEnum(str, Enum):
@@ -58,6 +71,11 @@ class SweepConfig(BaseModel):
     parameters: dict[str, dict] = Field(..., description="List of parameters to sweep over")
     run_cap: int = Field(10, description="Maximum number of runs to execute in the sweep")
 
+    def model_post_init(self, context):
+        """Validate the sweep configuration after initialization."""
+        if self.method == SweepMethodEnum.bayes and self.metric is None:
+            raise ValueError("Bayesian sweeps require a metric configuration.")
+
     @classmethod
     def from_sweep(cls, sweep: Run) -> "SweepConfig":
         """Create a SweepConfig instance from an MLflow Run object."""
@@ -68,3 +86,8 @@ class SweepConfig(BaseModel):
             config = yaml.safe_load(file)
 
         return cls(**config)  # Validate the config
+
+
+class MetricHistory(BaseModel):
+    run_id: str = Field(..., description="Run IDs associated with the metric history")
+    metrics: list[dict] = Field(..., description="List of metric dicts for the run")

@@ -4,7 +4,7 @@ command:
   --batch-size ${batch_size}
 experiment_name: sweep-demo
 sweep_name: test-sweep
-method: random
+method: bayes
 metric:
   name: metric1
   goal: maximize

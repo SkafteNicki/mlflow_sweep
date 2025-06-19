@@ -73,7 +73,7 @@ extra_css:
   - stylesheets/extra.css
 
 nav:
-  - Home: index.md
+  - 🏠 Home: index.md
   - 🚀 Getting Started: quickstart.md
   - 📄 Configuration: configuration.md
   - 📘 API reference: api_references.md

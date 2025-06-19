@@ -6,16 +6,12 @@ import mlflow
 from mlflow import MlflowClient
 from mlflow.entities import Run
 
+from mlflow_sweep.models import ExtendedSweepRun, MetricHistory
+
 with warnings.catch_warnings():
     # sweep dependency still uses V1 API of pydantic, so we need to ignore the warning about config keys
     warnings.filterwarnings("ignore", category=UserWarning, message="Valid config keys have changed in V2.*")
-    from sweeps import RunState, SweepRun
-
-    class ExtendedSweepRun(SweepRun):
-        """Extended SweepRun to include additional information."""
-
-        id: str
-        start_time: int
+    from sweeps import RunState
 
 
 def status_mapping(mlflow_status: str) -> RunState:
@@ -55,13 +51,15 @@ class SweepState:
         if with_metric != "":
             metric_history = []
             for run in mlflow_runs:
-                metric_history.append(
-                    (
-                        run.data.tags.get("mlflow.sweepRunId"),
-                        self.client.get_metric_history(run.info.run_id, key=with_metric),
-                    )
+                history = MetricHistory(
+                    run_id=run.data.tags.get("mlflow.sweepRunId"),
+                    metrics=[
+                        {with_metric: v.value} for v in self.client.get_metric_history(run.info.run_id, key=with_metric)
+                    ],
                 )
-            metric_history_sorted = sorted(metric_history, key=lambda x: x[0])
+                metric_history.append(history)
+
+            metric_history_sorted = sorted(metric_history, key=lambda x: x.run_id)
 
         mlflow_runs_sorted = sorted(mlflow_runs, key=lambda run: run.data.tags.get("mlflow.sweepRunId"))
         parameters_sorted = sorted(parameters, key=lambda x: x["sweep_run_id"])
@@ -107,7 +105,9 @@ class SweepState:
         )
 
     @staticmethod
-    def convert_from_mlflow_runinfo_to_sweep_run(mlflow_run: Run, params: dict, metrics: list = []) -> ExtendedSweepRun:
+    def convert_from_mlflow_runinfo_to_sweep_run(
+        mlflow_run: Run, params: dict, metrics: None | MetricHistory = None
+    ) -> ExtendedSweepRun:
         """Convert an MLflow Run to a SweepRun.
 
         Args:
@@ -123,7 +123,7 @@ class SweepState:
             id=mlflow_run.info.run_id,
             name=mlflow_run.info.run_name,
             summaryMetrics=mlflow_run.data.metrics,  # ty: ignore[unknown-argument]
-            history=metrics,
+            history=[] if metrics is None else metrics.metrics,
             config=params,
             state=status_mapping(mlflow_run.info.status),
             start_time=mlflow_run.info.start_time,
