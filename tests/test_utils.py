@@ -28,9 +28,8 @@ def test_calculate_feature_importance_and_correlation_basic(sample_data):
     for param in params:
         assert "importance" in result[param]
         assert "permutation_importance" in result[param]
-        assert "correlation" in result[param]
-        assert "pearson" in result[param]["correlation"]
-        assert "spearman" in result[param]["correlation"]
+        assert "pearson" in result[param]
+        assert "spearman" in result[param]
 
 
 def test_calculate_feature_importance_values(sample_data):
@@ -55,8 +54,8 @@ def test_calculate_feature_importance_correlations(sample_data):
 
     # Correlation values should be between -1 and 1
     for param in params:
-        assert -1 <= result[param]["correlation"]["pearson"] <= 1
-        assert -1 <= result[param]["correlation"]["spearman"] <= 1
+        assert -1 <= result[param]["pearson"] <= 1
+        assert -1 <= result[param]["spearman"] <= 1
 
 
 def test_empty_parameter_set():
@@ -103,3 +102,19 @@ def test_with_constant_parameter():
 
     # Constant features should have zero importance in RandomForest
     assert result["constant_param"]["importance"] == 0.0
+
+
+def test_current_time_convert():
+    """Test that current_time_convert correctly formats timestamps."""
+    from mlflow_sweep.utils import current_time_convert
+
+    # Test case 1: Epoch timestamp (January 1, 1970)
+    assert current_time_convert(0) == "1970-01-01 00:00:00"
+
+    # Test case 2: Specific known timestamp
+    # 1609459200000 ms = January 1, 2021 00:00:00 UTC
+    assert current_time_convert(1609459200000) == "2021-01-01 00:00:00"
+
+    # Test case 3: Another specific timestamp
+    # 1640995200000 ms = January 1, 2022 00:00:00 UTC
+    assert current_time_convert(1640995200000) == "2022-01-01 00:00:00"

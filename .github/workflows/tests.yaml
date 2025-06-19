@@ -40,3 +40,7 @@ jobs:
         run: |
           uv run coverage run -m pytest tests/ -v
           uv run coverage report -i -m
+
+      - name: Run doctests
+        run: |
+          uv run pytest src/mlflow_sweep

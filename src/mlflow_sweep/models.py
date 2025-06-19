@@ -8,37 +8,55 @@ from pydantic import BaseModel, ConfigDict, Field
 
 
 class SweepMethodEnum(str, Enum):
+    """Enumeration for sweep methods."""
+
     grid = "grid"
     random = "random"
 
 
 class GoalEnum(str, Enum):
+    """Enumeration for sweep goals."""
+
     maximize = "maximize"
     minimize = "minimize"
 
 
 class MetricConfig(BaseModel):
+    """Configuration for the metric to track during the sweep.
+
+    Attributes:
+        name (str): Name of the metric to track.
+        goal (GoalEnum): Goal for the metric, either 'maximize' or 'minimize'.
+
+    """
+
     name: str = Field(..., description="Name of the metric to track")
     goal: GoalEnum = Field(..., description="Goal for the metric (e.g., 'maximize', 'minimize')")
 
 
 class SweepConfig(BaseModel):
+    """Configuration for a sweep in MLflow.
+
+    Attributes:
+        command (str): Command to run for each sweep trial.
+        experiment_name (str): Name of the MLflow experiment.
+        sweep_name (str): Name of the sweep, generated if not provided.
+        method (SweepMethodEnum): Method for the sweep (e.g., 'grid', 'random').
+        metric (MetricConfig | None): Configuration for the metric to track.
+        parameters (dict[str, dict]): List of parameters to sweep over.
+        run_cap (int): Maximum number of runs to execute in the sweep.
+
+    """
+
     model_config = ConfigDict(extra="forbid")
 
     command: str = Field(..., description="Command to run for each sweep trial")
-    experiment_name: str = Field("", description="Name of the MLflow experiment")
-    sweep_name: str = Field("", description="Name of the sweep")
+    experiment_name: str = Field("Default", description="Name of the MLflow experiment")
+    sweep_name: str = Field(default_factory=lambda: "sweep-" + _generate_random_name(), description="Name of the sweep")
     method: SweepMethodEnum = Field(SweepMethodEnum.random, description="Method for the sweep (e.g., 'grid', 'random')")
     metric: MetricConfig | None = Field(None, description="Configuration for the metric to track")
     parameters: dict[str, dict] = Field(..., description="List of parameters to sweep over")
     run_cap: int = Field(10, description="Maximum number of runs to execute in the sweep")
-
-    def model_post_init(self, context):
-        """Post-initialization hook to set default values if not provided."""
-        if self.experiment_name == "":
-            self.experiment_name = "Default"
-        if self.sweep_name == "":
-            self.sweep_name = "sweep-" + _generate_random_name()
 
     @classmethod
     def from_sweep(cls, sweep: Run) -> "SweepConfig":

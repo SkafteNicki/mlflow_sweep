@@ -1,19 +1,18 @@
-import json
-from unittest.mock import MagicMock, mock_open, patch
+import uuid
+from unittest.mock import MagicMock, patch
 
 import pytest
-import sweeps
 
 from mlflow_sweep.models import SweepConfig
 from mlflow_sweep.sampler import SweepSampler
+from mlflow_sweep.sweepstate import SweepState
 
 
 @pytest.fixture
-def mock_parent_run():
-    mock_run = MagicMock()
-    mock_run.info.run_id = "test_run_id"
-    mock_run.info.artifact_uri = "file:///tmp/artifacts"
-    return mock_run
+def mock_sweepstate():
+    mock_state = MagicMock(spec=SweepState)
+    mock_state.get_all.return_value = []
+    return mock_state
 
 
 @pytest.fixture
@@ -27,79 +26,46 @@ def sweep_config():
     )
 
 
-class TestSweepProcessor:
-    def test_init(self, sweep_config, mock_parent_run):
-        processor = SweepSampler(sweep_config, mock_parent_run)
-        assert processor.config == sweep_config
-        assert processor.parent_sweep == mock_parent_run
+class TestSweepSampler:
+    def test_init(self, sweep_config, mock_sweepstate):
+        sampler = SweepSampler(sweep_config, mock_sweepstate)
+        assert sampler.config == sweep_config
+        assert sampler.sweepstate == mock_sweepstate
 
-    @patch("mlflow.artifacts.list_artifacts")
-    def test_load_previous_runs_no_data(self, mock_list_artifacts, mock_parent_run, sweep_config):
-        mock_list_artifacts.return_value = []
-
-        processor = SweepSampler(sweep_config, mock_parent_run)
-        result = processor.load_previous_runs()
-
-        assert result == []
-        mock_list_artifacts.assert_called_once_with(run_id="test_run_id")
-
-    @patch("mlflow.artifacts.list_artifacts")
-    @patch("os.path.join")
-    @patch("builtins.open", new_callable=mock_open)
-    def test_load_previous_runs_with_data(
-        self, mock_file, mock_join, mock_list_artifacts, mock_parent_run, sweep_config
-    ):
-        # Create a mock artifact
-        mock_artifact = MagicMock()
-        mock_artifact.path = "proposed_parameters.json"
-        mock_list_artifacts.return_value = [mock_artifact]
-
-        # Set up the path join
-        mock_join.return_value = "/tmp/artifacts/proposed_parameters.json"
-
-        # Mock the file contents
-        mock_data = {
-            "columns": ["learning_rate", "batch_size", "run", "parent_run_id"],
-            "data": [[0.01, 32, 1, "test_run_id"], [0.1, 64, 2, "test_run_id"]],
-        }
-        mock_file.return_value.__enter__.return_value.read.return_value = json.dumps(mock_data)
-
-        processor = SweepSampler(sweep_config, mock_parent_run)
-        result = processor.load_previous_runs()
-
-        assert len(result) == 2
-        assert isinstance(result[0], sweeps.SweepRun)
-        assert result[0].config["learning_rate"]["value"] == 0.01
-        assert result[0].config["batch_size"]["value"] == 32
-        assert result[0].state == sweeps.RunState.finished
-
-    @patch.object(SweepSampler, "load_previous_runs")
-    @patch("sweeps.next_run")
-    def test_propose_next_under_cap(self, mock_next_run, mock_load_previous, sweep_config, mock_parent_run):
-        mock_load_previous.return_value = []
-
+    def test_propose_next_under_cap(self, sweep_config, mock_sweepstate):
         # Create a mock sweep configuration
         mock_config = MagicMock()
         mock_config.config = {"learning_rate": {"value": 0.01}, "batch_size": {"value": 32}}
-        mock_next_run.return_value = mock_config
 
-        processor = SweepSampler(sweep_config, mock_parent_run)
-        command, params = processor.propose_next()  # ty: ignore
+        with (
+            patch("sweeps.next_run", return_value=mock_config),
+            patch("uuid.uuid4", return_value=uuid.UUID("12345678-1234-5678-1234-567812345678")),
+        ):
+            sampler = SweepSampler(sweep_config, mock_sweepstate)
+            command, params = sampler.propose_next()  # ty: ignore
 
-        assert command == "python train.py --lr=0.01 --batch=32"
-        assert params == {"learning_rate": 0.01, "batch_size": 32, "run": 1}
-        mock_next_run.assert_called_once_with(sweep_config=sweep_config.model_dump(), runs=[])
+            assert command == "python train.py --lr=0.01 --batch=32"
+            assert params["learning_rate"] == 0.01
+            assert params["batch_size"] == 32
+            assert params["run"] == 1
+            assert params["sweep_run_id"] == "12345678-1234-5678-1234-567812345678"
 
-    @patch.object(SweepSampler, "load_previous_runs")
-    def test_propose_next_at_cap(self, mock_load_previous, sweep_config, mock_parent_run):
+    def test_propose_next_at_cap(self, sweep_config, mock_sweepstate):
         # Create 4 mock runs (equal to run cap)
-        mock_runs = [MagicMock() for _ in range(4)]
-        mock_load_previous.return_value = mock_runs
+        mock_sweepstate.get_all.return_value = [MagicMock() for _ in range(4)]
 
-        processor = SweepSampler(sweep_config, mock_parent_run)
-        result = processor.propose_next()
+        sampler = SweepSampler(sweep_config, mock_sweepstate)
+        result = sampler.propose_next()
 
         assert result is None  # Should return None when run cap is reached
+
+    def test_propose_next_exhausted(self, sweep_config, mock_sweepstate):
+        # Test when the sweep module returns None (e.g., grid search exhausted)
+        with patch("sweeps.next_run", return_value=None):
+            sampler = SweepSampler(sweep_config, mock_sweepstate)
+            result = sampler.propose_next()
+
+            assert result is None
 
     def test_replace_dollar_signs(self):
         parameters = {"learning_rate": 0.01, "batch_size": 32}
