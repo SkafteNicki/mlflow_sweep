@@ -106,13 +106,6 @@ In the same way, depending on how you pass parameters to your script you should 
     command: uv run example.py learning_rate=${learning_rate} batch_size=${batch_size}
     ```
 
-Currently, there are a couple of standard ways to pass parameters to your script, that we do not support yet:
-
-* Environment variables: if you script loads in hyperparameters from environment variables, then this is not supported.
-
-* JSON file: if you script loads in hyperparameters from a JSON file, then this is not supported.
-
-
 ## Method configuration
 
 Currently, MLflow sweep supports three methods for hyperparameter optimization: `bayes`, `random`, and `grid`. The
@@ -260,4 +253,24 @@ Here are examples of how to configure common hyperparameters:
     hyperparameter:
       distribution: categorical
       values: ["--hyperparameter", "--no-hyperparameter"]
+  ```
+
+* If you have hyperparameters which is loaded into your script as environment variables, you can just extend the
+  `command` field to first set the environment variables and then run the script:
+
+  ```yaml
+  command: |
+    export HYPERPARAMETER=${hyperparameter} &&
+    uv run example.py --learning-rate ${learning_rate} --batch-size ${batch_size}
+  parameters:
+    hyperparameter:
+      distribution: categorical
+      values: ["value1", "value2"]
+    learning_rate:
+      distribution: log_uniform
+      min: 1e-4
+      max: 1e-2
+    batch_size:
+      distribution: categorical
+      values: [16, 32, 64, 128]
   ```
