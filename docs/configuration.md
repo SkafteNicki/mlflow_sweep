@@ -26,17 +26,17 @@ documentation part is therefore partly taken from [here](https://docs.wandb.ai/g
 A minimal configuration file looks like this:
 
 ```yaml
-command:                      # Command to run the training script with parameters
+command:                      # Command to run the training script with parameters (required)
   uv run example.py
   --learning-rate ${learning_rate}
   --batch-size ${batch_size}
 experiment_name: sweep-demo   # Name of the experiment
 sweep_name: test-sweep        # Name of the sweep
-method: random
+method: random                # Method for hyperparameter optimization
 metric:                       # Metric to optimize
   name: metric1
   goal: maximize
-parameters:                   # Parameters to optimize
+parameters:                   # Parameters to optimize (required)
   learning_rate:
     distribution: uniform
     min: 0.001
@@ -124,39 +124,127 @@ a grid of values.
 
 ## Metric configuration
 
+The metric configuration is used to specify the metric that will be optimized during the sweep. This is only relevant
+if you are using the `bayes` method for hyperparameter optimization. The metric is specified as a dictionary with the
+following fields:
+
+```
+metric:                       # Metric to optimize
+  name: metric1
+  goal: maximize
+```
+
+where `goal` can be either `maximize` or `minimize`. The `name` field is the name of a metric which should be logged
+during the run using `mlflow.log_metric`.
+
 ## Parameter Configuration
 
-=== "Categorical variables"
+The most complex part of the configuration file is the `parameters` section, which defines the hyperparameters to be
+optimized. It is a dictionary where each key is the name of a hyperparameter and then the options for that
+hyperparameter
 
-    something something
+```yaml
+parameters:
+  parameter1:
+    options for parameter1
+  parameter2:
+    options for parameter2
+  ...
+```
 
-=== "Uniform"
+The following table lists the available options for each hyperparameter:
 
-    something something
+| Search Constraint | Description |
+|-------------------|-------------|
+| `values`          | Specifies all valid values for this hyperparameter. Compatible with grid. |
+| `value`           | Specifies the single valid value for this hyperparameter. Compatible with grid. |
+| `distribution`    | Specify a probability distribution. See the note following this table for information on default values. |
+| `probabilities`   | Specify the probability of selecting each element of values when using random. |
+| `min`, `max`      | `(int or float)` Maximum and minimum values. If int, for `int_uniform`-distributed hyperparameters. If float, for `uniform`-distributed hyperparameters. |
+| `mu`              | `(float)` Mean parameter for `normal`- or `lognormal`-distributed hyperparameters. |
+| `sigma`           | `(float)` Standard deviation parameter for `normal`- or `lognormal`-distributed hyperparameters. |
+| `q`               | `(float)` Quantization step size for quantized hyperparameters. |
 
-=== "Normal"
+!!! info
 
-    something something
+    The following assumptions are made for the `distribution` key if not specified:
 
-=== "Log Uniform"
+    * Set to `categorical` if `values` is specified.
+    * Set to `constant` if `value` is specified.
+    * Set to `int_uniform` if `min` and `max` are specified and `min` and `max` are integers.
+    * Set to `uniform` if `min` and `max` are specified and `min` and `max` are floats.
 
-    something something
+??? "Values for distribution key"
 
+    The following table lists the available values for the `distribution` key in the `parameters` section.
 
-| Value for distribution key | Description                                                                                                                                                       |
-|----------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `constant`                 | Constant distribution. Must specify the constant value (`value`) to use.                                                                                          |
-| `categorical`              | Categorical distribution. Must specify all valid values (`values`) for this hyperparameter.                                                                       |
-| `int_uniform`              | Discrete uniform distribution on integers. Must specify `max` and `min` as integers.                                                                              |
-| `uniform`                  | Continuous uniform distribution. Must specify `max` and `min` as floats.                                                                                          |
-| `q_uniform`                | Quantized uniform distribution. Returns `round(X / q) * q` where `X` is uniform. `q` defaults to 1.                                                               |
-| `log_uniform`              | Log-uniform distribution. Returns a value `X` between `exp(min)` and `exp(max)` such that the natural logarithm is uniformly distributed between `min` and `max`. |
-| `log_uniform_values`       | Log-uniform distribution. Returns a value `X` between `min` and `max` such that `log(X)` is uniformly distributed between `log(min)` and `log(max)`.              |
-| `q_log_uniform`            | Quantized log uniform. Returns `round(X / q) * q` where `X` is `log_uniform`. `q` defaults to 1.                                                                  |
-| `q_log_uniform_values`     | Quantized log uniform. Returns `round(X / q) * q` where `X` is `log_uniform_values`. `q` defaults to 1.                                                           |
-| `inv_log_uniform`          | Inverse log uniform distribution. Returns `X`, where `log(1/X)` is uniformly distributed between `min` and `max`.                                                 |
-| `inv_log_uniform_values`   | Inverse log uniform distribution. Returns `X`, where `log(1/X)` is uniformly distributed between `log(1/max)` and `log(1/min)`.                                   |
-| `normal`                   | Normal distribution. Return value is normally distributed with mean `mu` (default 0) and standard deviation `sigma` (default 1).                                  |
-| `q_normal`                 | Quantized normal distribution. Returns `round(X / q) * q` where `X` is `normal`. `q` defaults to 1.                                                               |
-| `log_normal`               | Log normal distribution. Returns a value `X` such that the natural logarithm `log(X)` is normally distributed with mean `mu` (default 0) and `sigma` (default 1). |
-| `q_log_normal`             | Quantized log normal distribution. Returns `round(X / q) * q` where `X` is `log_normal`. `q` defaults to 1.                                                       |
+    | Value for distribution key | Description                                                                                                                                                       |
+    |----------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+    | `constant`                 | Constant distribution. Must specify the constant value (`value`) to use.                                                                                          |
+    | `categorical`              | Categorical distribution. Must specify all valid values (`values`) for this hyperparameter.                                                                       |
+    | `int_uniform`              | Discrete uniform distribution on integers. Must specify `max` and `min` as integers.                                                                              |
+    | `uniform`                  | Continuous uniform distribution. Must specify `max` and `min` as floats.                                                                                          |
+    | `q_uniform`                | Quantized uniform distribution. Returns `round(X / q) * q` where `X` is uniform. `q` defaults to 1.                                                               |
+    | `log_uniform`              | Log-uniform distribution. Returns a value `X` between `exp(min)` and `exp(max)` such that the natural logarithm is uniformly distributed between `min` and `max`. |
+    | `log_uniform_values`       | Log-uniform distribution. Returns a value `X` between `min` and `max` such that `log(X)` is uniformly distributed between `log(min)` and `log(max)`.              |
+    | `q_log_uniform`            | Quantized log uniform. Returns `round(X / q) * q` where `X` is `log_uniform`. `q` defaults to 1.                                                                  |
+    | `q_log_uniform_values`     | Quantized log uniform. Returns `round(X / q) * q` where `X` is `log_uniform_values`. `q` defaults to 1.                                                           |
+    | `inv_log_uniform`          | Inverse log uniform distribution. Returns `X`, where `log(1/X)` is uniformly distributed between `min` and `max`.                                                 |
+    | `inv_log_uniform_values`   | Inverse log uniform distribution. Returns `X`, where `log(1/X)` is uniformly distributed between `log(1/max)` and `log(1/min)`.                                   |
+    | `normal`                   | Normal distribution. Return value is normally distributed with mean `mu` (default 0) and standard deviation `sigma` (default 1).                                  |
+    | `q_normal`                 | Quantized normal distribution. Returns `round(X / q) * q` where `X` is `normal`. `q` defaults to 1.                                                               |
+    | `log_normal`               | Log normal distribution. Returns a value `X` such that the natural logarithm `log(X)` is normally distributed with mean `mu` (default 0) and `sigma` (default 1). |
+    | `q_log_normal`             | Quantized log normal distribution. Returns `round(X / q) * q` where `X` is `log_normal`. `q` defaults to 1.                                                       |
+
+Here are examples of how to configure common hyperparameters:
+
+=== "Learning rate"
+
+    Learning rate is a common hyperparameter that is often optimized in machine learning models. Because values are on
+    a logarithmic scale, we recommend using a log-uniform distribution to sample values.
+
+    ```yaml
+    parameters:
+      learning_rate:
+        distribution: log_uniform
+        min: 1e-4
+        max: 1e-2
+    ```
+
+=== "Batch size"
+
+    Batch size is usually set based on the available memory, but if you want to optimize it you may consider using a
+    categorical distribution to sample values from a list of possible batch sizes.
+
+    ```yaml
+    parameters:
+      batch_size:
+        distribution: categorical
+        values: [16, 32, 64, 128]
+    ```
+
+=== "Number of layers"
+
+    Number of layers is a common hyperparameter in deep learning models. It is usually an integer value, so you can use
+    a discrete uniform distribution to sample values.
+
+    ```yaml
+    parameters:
+      num_layers:
+        distribution: int_uniform
+        min: 1
+        max: 10
+    ```
+
+=== "Dropout rate"
+
+    Dropout rate is a common hyperparameter in deep learning models. It is usually a float value between 0 and 1, so
+    you can use a uniform distribution to sample values.
+
+    ```yaml
+    parameters:
+      dropout_rate:
+        distribution: uniform
+        min: 0.0
+        max: 0.5
+    ```
