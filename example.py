@@ -8,7 +8,7 @@ app = typer.Typer()
 
 
 @app.command()
-def main(learning_rate: float = 0.001, batch_size: int = 32):
+def main(learning_rate: float = 0.001, batch_size: int = 32, dropout: bool = False):
     """
     Example command that takes learning rate and batch size as arguments.
     """

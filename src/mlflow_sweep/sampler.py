@@ -16,7 +16,7 @@ class SweepSampler:
         self.sweepstate = sweepstate
 
     def propose_next(self) -> tuple[str, dict] | None:
-        previous_runs = self.sweepstate.get_all()
+        previous_runs = self.sweepstate.get_all(with_metric=self.config.metric.name if self.config.metric else "")
         if len(previous_runs) >= self.config.run_cap:
             return None  # Stop proposing new runs if the cap is reached
 

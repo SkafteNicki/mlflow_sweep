@@ -20,9 +20,6 @@ documentation part is therefore partly taken from [here](https://docs.wandb.ai/g
     - Weights and Biases have a `early_terminate` field to stop runs that are not performing well, this is not present
         in MLflow sweeps (at the moment, will be added in the future).
 
-    - Weights and Biases support three methods for hyperparameter optimization: `random`, `grid`, and `bayesian`.
-        MLflow sweeps currently only support `random` and `grid`.
-
 A minimal configuration file looks like this:
 
 ```yaml
@@ -118,9 +115,10 @@ Currently, there are a couple of standard ways to pass parameters to your script
 
 ## Method configuration
 
-Currently, MLflow sweep supports two methods for hyperparameter optimization: `random` and `grid`. The `random` method
-samples hyperparameters randomly from the specified distributions, while the `grid` method samples hyperparameters from
-a grid of values.
+Currently, MLflow sweep supports three methods for hyperparameter optimization: `bayes`, `random`, and `grid`. The
+`bayes` method uses Bayesian optimization to sample hyperparameters, which is a more efficient way to explore the
+hyperparameter space. The `random` method samples hyperparameters randomly from the specified distributions, while
+the `grid` method samples hyperparameters from a grid of values.
 
 ## Metric configuration
 
@@ -248,3 +246,18 @@ Here are examples of how to configure common hyperparameters:
         min: 0.0
         max: 0.5
     ```
+
+## Special cases
+
+* If you have hyperparameters that are boolean values, most commonly the syntax for providing these as arguments would
+  be `--hyperparameter` or `--no-hyperparameter`. In this case, you can use the `categorical` distribution with two
+  strings:
+
+  ```yaml
+  command:
+    uv run example.py ${hyperparameter}
+  parameters:
+    hyperparameter:
+      distribution: categorical
+      values: ["--hyperparameter", "--no-hyperparameter"]
+  ```
