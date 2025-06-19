@@ -1,6 +1,6 @@
 ##
 
-Base API Documentation. This file is auto-generated from the source code.
+Base API Documentation. The content of this file is auto-generated from the source code.
 
 # ::: mlflow_sweep.commands
     options:

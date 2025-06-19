@@ -20,6 +20,9 @@ documentation part is therefore partly taken from [here](https://docs.wandb.ai/g
     - Weights and Biases have a `early_terminate` field to stop runs that are not performing well, this is not present
         in MLflow sweeps (at the moment, will be added in the future).
 
+    - Weights and Biases support three methods for hyperparameter optimization: `random`, `grid`, and `bayesian`.
+        MLflow sweeps currently only support `random` and `grid`.
+
 A minimal configuration file looks like this:
 
 ```yaml
@@ -63,18 +66,18 @@ package manager you are using
     ```yaml
     command: python example.py --learning-rate ${learning_rate} --batch-size ${batch_size}
     ```
-=== "Poetry"
+=== "poetry"
 
     ```yaml
     command: poetry run python example.py --learning-rate ${learning_rate} --batch-size ${batch_size}
     ```
-=== "Pipenv"
+=== "pipenv"
 
     ```yaml
     command: pipenv run python example.py --learning-rate ${learning_rate} --batch-size ${batch_size}
     ```
 
-=== "UV"
+=== "uv"
 
     ```yaml
     command: uv run example.py --learning-rate ${learning_rate} --batch-size ${batch_size}
@@ -100,7 +103,18 @@ In the same way, depending on how you pass parameters to your script you should 
     command: uv run example.py --config-name config.yaml learning_rate=${learning_rate} batch_size=${batch_size}
     ```
 
-===
+=== "No hyphens"
+
+    ```yaml
+    command: uv run example.py learning_rate=${learning_rate} batch_size=${batch_size}
+    ```
+
+Currently, there are a couple of standard ways to pass parameters to your script, that we do not support yet:
+
+* Environment variables: if you script loads in hyperparameters from environment variables, then this is not supported.
+
+* JSON file: if you script loads in hyperparameters from a JSON file, then this is not supported.
+
 
 ## Method configuration
 

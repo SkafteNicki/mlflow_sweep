@@ -1,4 +1,4 @@
-# MLFlow Sweep
+# MLflow Sweep
 
 <figure markdown="span">
   ![Image title](figures/logo.png){ width="300" }
@@ -62,7 +62,8 @@ Commands:
   sweep        MLflow Sweep CLI commands.            <-- this is the new command
 ```
 
-To learn more about the `sweep` command, visit the following sections of the documentation.
+To learn more about the `sweep` command and how to configure and start a run, visit the following sections of the
+documentation.
 
 <div class="grid cards" markdown>
 
@@ -126,8 +127,8 @@ Available tasks:
 
 ## ❕ License
 
-Package is licensed under Apache 2.0 license. See the LICENSE file for details.
-If you use this tool in your research, please cite it as:
+Package is licensed under Apache 2.0 license. See the LICENSE file for details. If you use this tool in your research,
+please cite it as:
 
 ```bibtex
 @misc{mlflow_sweep,
