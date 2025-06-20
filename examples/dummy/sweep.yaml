@@ -1,13 +1,18 @@
 command:
-  uv run example.py
+  uv run main.py
+  --learning-rate ${learning_rate}
   --batch-size ${batch_size}
 experiment_name: sweep-demo
 sweep_name: test-sweep
-method: grid
+method: bayes
 metric:
   name: metric1
   goal: maximize
 parameters:
+  learning_rate:
+    distribution: uniform
+    min: 0.001
+    max: 0.1
   batch_size:
     values: [16, 32, 64, 128]
 run_cap: 10

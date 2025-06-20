@@ -42,12 +42,15 @@ dev = [
   "python-semantic-release>=9.21.1",
   "ruff>=0.11.13",
   "ty>=0.0.1a10",
-  "typer>=0.16",
 ]
 docs = [
   "mkdocs-glightbox>=0.4",
   "mkdocs-material>=9.6.14",
   "mkdocstrings-python>=1.16.12",
+]
+examples = [
+  "scikit-learn>=1.7",
+  "typer>=0.16",
 ]
 
 [tool.ruff]

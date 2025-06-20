@@ -4,6 +4,7 @@ import numpy as np
 from scipy.stats import pearsonr, spearmanr
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.inspection import permutation_importance
+from sklearn.preprocessing import OneHotEncoder
 
 
 def calculate_feature_importance_and_correlation(
@@ -45,7 +46,21 @@ def calculate_feature_importance_and_correlation(
                 f"Parameter '{param_name}' has {len(param_array)} values, but metric has {len(metric_value)} values"
             )
 
-    data = np.column_stack(list(parameter_values.values()))
+    # Encode categorical parameters
+    encoded_params = {}
+    encoders = {}
+
+    for param_name, param_array in parameter_values.items():
+        if param_array.dtype.kind in {"U", "S", "O"}:  # Check for string or object type
+            encoder = OneHotEncoder(handle_unknown="ignore", sparse_output=False)
+            encoded = encoder.fit_transform(param_array.reshape(-1, 1))
+            encoders[param_name] = encoder
+            for i, category in enumerate(encoder.categories_[0]):
+                encoded_params[f"{param_name}_{category}"] = encoded[:, i]
+        else:
+            encoded_params[param_name] = param_array
+    breakpoint()
+    data = np.column_stack(list(encoded_params.values()))
 
     model = RandomForestRegressor()
     model.fit(data, metric_value)

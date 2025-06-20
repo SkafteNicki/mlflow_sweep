@@ -1,0 +1,35 @@
+command:
+  uv run main.py
+  --n-estimators ${n_estimators}
+  --criterion ${criterion}
+  --max-depth ${max_depth}
+  --min-samples-split ${min_samples_split}
+  --min-samples-leaf ${min_samples_leaf}
+  --max-features ${max_features}
+  ${bootstrap}
+experiment_name: example-sweep
+sweep_name: sklearn-sweep
+method: bayes
+metric:
+  name: test_accuracy
+  goal: maximize
+parameters:
+  n_estimators:
+    min: 50
+    max: 300
+    distribution: int_uniform
+  criterion:
+    values: ["gini", "entropy", "log_loss"]
+  max_depth:
+    min: 3
+    max: 20
+    distribution: int_uniform
+  min_samples_split:
+    values: [2, 4, 6, 8]
+  min_samples_leaf:
+    values: [1, 2, 4]
+  max_features:
+    values: ["sqrt", "log2", null]
+  bootstrap:
+    values: ["--bootstrap", "--no-bootstrap"]
+run_cap: 50
