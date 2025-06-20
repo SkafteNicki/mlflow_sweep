@@ -22,7 +22,7 @@ documentation part is therefore partly taken from [here](https://docs.wandb.ai/g
 
 A minimal configuration file looks like this:
 
-```yaml
+```yaml title="sweep.yaml"
 command:                      # Command to run the training script with parameters (required)
   uv run example.py
   --learning-rate ${learning_rate}
@@ -134,7 +134,7 @@ The most complex part of the configuration file is the `parameters` section, whi
 optimized. It is a dictionary where each key is the name of a hyperparameter and then the options for that
 hyperparameter
 
-```yaml
+```yaml title="sweep.yaml"
 parameters:
   parameter1:
     options for parameter1
@@ -194,7 +194,7 @@ Here are examples of how to configure common hyperparameters:
     Learning rate is a common hyperparameter that is often optimized in machine learning models. Because values are on
     a logarithmic scale, we recommend using a log-uniform distribution to sample values.
 
-    ```yaml
+    ```yaml title="sweep.yaml"
     parameters:
       learning_rate:
         distribution: log_uniform
@@ -207,7 +207,7 @@ Here are examples of how to configure common hyperparameters:
     Batch size is usually set based on the available memory, but if you want to optimize it you may consider using a
     categorical distribution to sample values from a list of possible batch sizes.
 
-    ```yaml
+    ```yaml title="sweep.yaml"
     parameters:
       batch_size:
         distribution: categorical
@@ -219,7 +219,7 @@ Here are examples of how to configure common hyperparameters:
     Number of layers is a common hyperparameter in deep learning models. It is usually an integer value, so you can use
     a discrete uniform distribution to sample values.
 
-    ```yaml
+    ```yaml title="sweep.yaml"
     parameters:
       num_layers:
         distribution: int_uniform
@@ -246,7 +246,7 @@ Here are examples of how to configure common hyperparameters:
   be `--hyperparameter` or `--no-hyperparameter`. In this case, you can use the `categorical` distribution with two
   strings:
 
-  ```yaml
+  ```yaml title="sweep.yaml"
   command:
     uv run example.py ${hyperparameter}
   parameters:
@@ -258,7 +258,7 @@ Here are examples of how to configure common hyperparameters:
 * If you have hyperparameters which is loaded into your script as environment variables, you can just extend the
   `command` field to first set the environment variables and then run the script:
 
-  ```yaml
+  ```yaml title="sweep.yaml"
   command: |
     export HYPERPARAMETER=${hyperparameter} &&
     uv run example.py --learning-rate ${learning_rate} --batch-size ${batch_size}
@@ -266,6 +266,32 @@ Here are examples of how to configure common hyperparameters:
     hyperparameter:
       distribution: categorical
       values: ["value1", "value2"]
+    learning_rate:
+      distribution: log_uniform
+      min: 1e-4
+      max: 1e-2
+    batch_size:
+      distribution: categorical
+      values: [16, 32, 64, 128]
+  ```
+
+* If you have hyperparameters that are not passed as command line arguments but are instead loaded form a configuration
+  file you need to include custom logic before running the script. As an example, if you are storing hyperparameters
+  in a JSON file, you can use the `jq` command to modify the file before running the script:
+
+  ```json title="config.json"
+  {
+    "learning_rate": 0.001,
+    "batch_size": 32,
+  }
+  ```
+
+  ```yaml title="sweep.yaml"
+  command: |
+    jq '.learning_rate = ${learning_rate} | .batch_size = ${batch_size}'
+    config.json > config_updated.json &&
+    uv run example.py --config config_updated.json
+  parameters:
     learning_rate:
       distribution: log_uniform
       min: 1e-4
