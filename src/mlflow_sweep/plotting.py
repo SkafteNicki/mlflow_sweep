@@ -169,3 +169,54 @@ def plot_parameter_importance_and_correlation(results: dict, metric_name: str = 
             fig.update_yaxes(categoryorder="array", categoryarray=param_order, row=i, col=j)
     fig.update_layout(showlegend=False)
     return fig
+
+
+def plot_trial_timeline(
+    df: pd.DataFrame,
+    start_col: str = "start",
+    end_col: str = "end",
+    run_col: str = "run",
+    status_col: str = "status",
+    color_map: dict | None = None,
+    title: str = "Timeline Plot",
+) -> go.Figure:
+    """
+    Creates a Plotly timeline plot for trial runs.
+
+    Parameters:
+    - df: DataFrame containing trial data.
+    - start_col: Name of the column containing start timestamps.
+    - end_col: Name of the column containing end timestamps.
+    - run_col: Name of the column identifying run IDs.
+    - status_col: Name of the column specifying trial status.
+    - color_map: Optional dict to specify colors for statuses.
+    - title: Title of the plot.
+
+    Example:
+        >>> import pandas as pd
+        >>> data = {
+        ...     "start": ["2023-01-01 10:00:00", "2023-01-01 11:00:00", "2023-01-01 12:00:00"],
+        ...     "end": ["2023-01-01 10:30:00", "2023-01-01 11:30:00", "2023-01-01 12:30:00"],
+        ...     "run": ["Run 1", "Run 2", "Run 3"],
+        ...     "status": ["finished", "failed", "pruned"]
+        ... }
+        >>> df = pd.DataFrame(data)
+        >>> plot_trial_timeline(df)
+
+    """
+    # Default color map if none is provided
+    if color_map is None:
+        color_map = {"finished": "blue", "failed": "red", "pruned": "orange"}
+
+    # Ensure datetime columns are in proper format
+    df[start_col] = pd.to_datetime(df[start_col])
+    df[end_col] = pd.to_datetime(df[end_col])
+
+    # Create timeline plot
+    fig = px.timeline(df, x_start=start_col, x_end=end_col, y=run_col, color=status_col, color_discrete_map=color_map)
+
+    fig.update_layout(
+        title=title, xaxis_title="Datetime", yaxis_title="Trial", yaxis_autorange="reversed", template="plotly_white"
+    )
+
+    return fig

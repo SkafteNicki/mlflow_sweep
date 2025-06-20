@@ -2,9 +2,13 @@ name: Docs
 
 on:
   push:
-    branches: [main]
+    branches:
+    - main
+    - master
   pull_request:
-    branches: [main]
+    branches:
+    - main
+    - master
 
 permissions:
   contents: write
@@ -40,7 +44,7 @@ jobs:
   deploy:
     name: Deploy Docs
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main')
     steps:
       - name: Checkout code
         uses: actions/checkout@v4

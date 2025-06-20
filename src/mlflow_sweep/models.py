@@ -17,6 +17,7 @@ with warnings.catch_warnings():
 
         id: str
         start_time: int
+        end_time: int
 
 
 class SweepMethodEnum(str, Enum):

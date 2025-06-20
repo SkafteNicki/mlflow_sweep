@@ -15,7 +15,7 @@ from rich.console import Console
 from rich.table import Table
 
 from mlflow_sweep.models import SweepConfig
-from mlflow_sweep.plotting import plot_metric_vs_time, plot_parameter_importance_and_correlation
+from mlflow_sweep.plotting import plot_metric_vs_time, plot_parameter_importance_and_correlation, plot_trial_timeline
 from mlflow_sweep.sampler import SweepSampler
 from mlflow_sweep.sweepstate import SweepState
 from mlflow_sweep.utils import calculate_feature_importance_and_correlation, current_time_convert
@@ -111,6 +111,23 @@ def finalize_command(sweep_id: str = "") -> None:
     runstate = SweepState(sweep_id=sweep.info.run_id)
     all_runs = runstate.get_all()
 
+    mlflow.set_experiment(experiment_id=sweep.info.experiment_id)
+    mlflow.start_run(run_id=sweep.info.run_id)
+
+    data = pd.DataFrame(
+        {
+            "start": [current_time_convert(run.start_time) for run in all_runs],
+            "end": [current_time_convert(run.end_time) for run in all_runs],
+            "run": [run.id for run in all_runs],
+            "status": [run.state for run in all_runs],
+        }
+    )
+    data.sort_values(by="start", inplace=True)
+    fig = plot_trial_timeline(df=data)
+    fig.write_html("run_timeline.html")
+    mlflow.log_artifact("run_timeline.html")
+    Path("run_timeline.html").unlink(missing_ok=True)
+
     if config.metric is not None:
         metric_values = np.array([run.summary_metrics.get(config.metric.name) for run in all_runs])
         parameter_values = {
@@ -150,9 +167,6 @@ def finalize_command(sweep_id: str = "") -> None:
                 config.metric.name: [run.summary_metrics.get(config.metric.name) for run in all_runs],
             }
         )
-
-        mlflow.set_experiment(experiment_id=sweep.info.experiment_id)
-        mlflow.start_run(run_id=sweep.info.run_id)
 
         fig = plot_metric_vs_time(data, time_col="created", metric_col=config.metric.name)
         fig.write_html("metric_vs_time.html")

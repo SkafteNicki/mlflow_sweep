@@ -47,6 +47,7 @@ class SweepState:
             filter_string=f"tag.mlflow.parentRunId = '{self.sweep_id}'",
             output_format="list",
         )
+
         parameters = self.get_parameters()
         if with_metric != "":
             metric_history = []
@@ -127,6 +128,7 @@ class SweepState:
             config=params,
             state=status_mapping(mlflow_run.info.status),
             start_time=mlflow_run.info.start_time,
+            end_time=mlflow_run.info.end_time,
         )
 
     def get_parameters(self):
