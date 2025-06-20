@@ -1,0 +1,24 @@
+:root {
+  --md-primary-fg-color:        #0099e8;
+  --md-primary-fg-color--light: #0099e8;
+  --md-primary-fg-color--dark:  #0099e8;
+
+  --dark-color: #48caf0;
+  --light-color: #48caf0;
+}
+
+a:link {
+  color: light-dark(var(--light-color), var(--dark-color));
+}
+
+a:visited {
+  color: light-dark(var(--light-color), var(--dark-color));
+}
+
+a:hover {
+  color: light-dark(var(--light-color), var(--dark-color));
+}
+
+a:active {
+  color: light-dark(var(--light-color), var(--dark-color));
+}
