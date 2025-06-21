@@ -201,7 +201,7 @@ def plot_trial_timeline(
         ...     "status": ["finished", "failed", "pruned"]
         ... }
         >>> df = pd.DataFrame(data)
-        >>> plot_trial_timeline(df)
+        >>> fig = plot_trial_timeline(df)
 
     """
     # Default color map if none is provided

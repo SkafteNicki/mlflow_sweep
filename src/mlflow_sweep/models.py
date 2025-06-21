@@ -42,6 +42,15 @@ class MetricConfig(BaseModel):
         name (str): Name of the metric to track.
         goal (GoalEnum): Goal for the metric, either 'maximize' or 'minimize'.
 
+    Examples:
+        >>> metric = MetricConfig(name="accuracy", goal="maximize")
+        >>> metric.name
+        'accuracy'
+        >>> metric.goal
+        <GoalEnum.maximize: 'maximize'>
+        >>> metric_min = MetricConfig(name="error_rate", goal="minimize")
+        >>> metric_min.goal
+        <GoalEnum.minimize: 'minimize'>
     """
 
     name: str = Field(..., description="Name of the metric to track")
@@ -59,6 +68,23 @@ class SweepConfig(BaseModel):
         metric (MetricConfig | None): Configuration for the metric to track.
         parameters (dict[str, dict]): List of parameters to sweep over.
         run_cap (int): Maximum number of runs to execute in the sweep.
+
+    Examples:
+        >>> params = {"learning_rate": {"distribution": "uniform", "min": 0.0001, "max": 0.1}}
+        >>> config = SweepConfig(
+        ...     command="python train.py",
+        ...     parameters=params,
+        ...     metric=MetricConfig(name="accuracy", goal="maximize"),
+        ...     method="random"
+        ... )
+        >>> config.experiment_name
+        'Default'
+        >>> config.run_cap
+        10
+        >>> config.method
+        <SweepMethodEnum.random: 'random'>
+        >>> config.metric.name
+        'accuracy'
 
     """
 
@@ -79,7 +105,28 @@ class SweepConfig(BaseModel):
 
     @classmethod
     def from_sweep(cls, sweep: Run) -> "SweepConfig":
-        """Create a SweepConfig instance from an MLflow Run object."""
+        """Create a SweepConfig instance from an MLflow Run object.
+
+        This method extracts the sweep configuration from the artifacts of an MLflow Run
+        by loading the sweep_config.yaml file from the run's artifact directory.
+
+        Args:
+            sweep (Run): An MLflow Run object containing sweep configuration artifacts.
+
+        Returns:
+            SweepConfig: A validated SweepConfig instance constructed from the run's artifacts.
+
+        Raises:
+            FileNotFoundError: If the sweep_config.yaml file cannot be found in the run artifacts.
+            ValueError: If the loaded configuration is invalid or missing required fields.
+
+        Examples:
+            >>> from mlflow.entities import Run
+            >>> run = mlflow.get_run("sweep_run_id")  # doctest: +SKIP
+            >>> config = SweepConfig.from_sweep(run)  # doctest: +SKIP
+            >>> config.method  # doctest: +SKIP
+            <SweepMethodEnum.random: 'random'>
+        """
         artifact_uri = sweep.info.artifact_uri.replace("file://", "")
         config_file_path = Path(artifact_uri) / "sweep_config.yaml"
 
@@ -90,5 +137,24 @@ class SweepConfig(BaseModel):
 
 
 class MetricHistory(BaseModel):
+    """Stores metric history for a specific run.
+
+    Attributes:
+        run_id (str): Run ID associated with the metric history.
+        metrics (list[dict]): List of metric dictionaries for the run.
+
+    Examples:
+        >>> metrics = [{"key": "accuracy", "value": 0.95, "step": 0, "timestamp": 1234567890}]
+        >>> history = MetricHistory(run_id="abc123", metrics=metrics)
+        >>> history.run_id
+        'abc123'
+        >>> len(history.metrics)
+        1
+        >>> history.metrics[0]["key"]
+        'accuracy'
+        >>> history.metrics[0]["value"]
+        0.95
+    """
+
     run_id: str = Field(..., description="Run IDs associated with the metric history")
     metrics: list[dict] = Field(..., description="List of metric dicts for the run")

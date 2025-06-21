@@ -59,7 +59,7 @@ def calculate_feature_importance_and_correlation(
                 encoded_params[f"{param_name}_{category}"] = encoded[:, i]
         else:
             encoded_params[param_name] = param_array
-    breakpoint()
+
     data = np.column_stack(list(encoded_params.values()))
 
     model = RandomForestRegressor()
