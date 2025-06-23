@@ -16,13 +16,13 @@ def clean(ctx: Context) -> None:
     ctx.run("rm -rf .pytest_cache", echo=True, pty=True)
     ctx.run("rm -rf .ruff_cache", echo=True, pty=True)
     ctx.run("rm -f .coverage", echo=True, pty=True)
-    ctx.run("rm -rf mlruns", echo=True, pty=True)
+    ctx.run("find . -type d -name 'mlruns' -exec rm -rf {} +", echo=True, pty=True)
 
 
 @task
 def doctests(ctx: Context) -> None:
     """Run doctests."""
-    ctx.run("uv run pytest src/mlflow_sweep", echo=True, pty=True)
+    ctx.run("uv run pytest src/mlflow_sweep -v", echo=True, pty=True)
 
 
 @task
