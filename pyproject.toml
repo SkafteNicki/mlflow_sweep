@@ -50,6 +50,8 @@ docs = [
 ]
 examples = [
   "scikit-learn>=1.7",
+  "torch>=2.7.1",
+  "torchvision>=0.22.1",
   "typer>=0.16",
 ]
 

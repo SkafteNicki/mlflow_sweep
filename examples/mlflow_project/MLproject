@@ -1,0 +1,10 @@
+name: Sweep Project
+
+conda_env: conda_env.yaml
+
+entry_points:
+  train:
+    parameters:
+      learning_rate: {type: float, default: 0.01}
+      batch_size: {type: int, default: 32}
+    command: "python main.py --learning_rate {learning_rate} --batch_size {batch_size}"

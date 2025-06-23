@@ -85,6 +85,16 @@ documentation.
 
     [:octicons-arrow-right-24: Configuration](configuration.md)
 
+-   :material-file-document-plus:{ .lg .middle } __Examples__
+
+    ---
+
+    A collection of examples demonstrating how to use MLflow sweep with different machine learning frameworks and
+    scenarios. This is a great way to see how the package can be used in practice and to get inspiration for your own
+    sweeps.
+
+    [:octicons-arrow-right-24: Examples](examples.md)
+
 -   :material-api:{ .lg .middle } __API references__
 
     ---
