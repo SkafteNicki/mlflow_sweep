@@ -2,6 +2,8 @@ import uuid
 import warnings
 from re import sub
 
+from sklearn.exceptions import ConvergenceWarning
+
 from mlflow_sweep.models import SweepConfig
 from mlflow_sweep.sweepstate import SweepState
 
@@ -28,7 +30,12 @@ class SweepSampler:
         if len(previous_runs) >= self.config.run_cap:
             return None  # Stop proposing new runs if the cap is reached
 
-        sweep_config = sweep_module.next_run(sweep_config=self.config.model_dump(), runs=previous_runs)
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore", category=ConvergenceWarning, message="The optimal value found for dimension 0 of parameter.*"
+            )
+            sweep_config = sweep_module.next_run(sweep_config=self.config.model_dump(), runs=previous_runs)
+
         if sweep_config is None:
             return None  # Grid search is exhausted or no more runs can be proposed
         proposed_parameters = {k: v["value"] for k, v in sweep_config.config.items()}

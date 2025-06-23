@@ -11,7 +11,7 @@ experiment_name: example-sweep
 sweep_name: sklearn-sweep
 method: bayes
 metric:
-  name: test_accuracy
+  name: mean_accuracy
   goal: maximize
 parameters:
   n_estimators:

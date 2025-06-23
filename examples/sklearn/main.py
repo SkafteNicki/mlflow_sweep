@@ -1,10 +1,8 @@
-import joblib
 import mlflow
 import typer
 from sklearn import datasets
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import cross_val_score
 
 app = typer.Typer(help="Train a RandomForestClassifier on the breast cancer dataset")
 
@@ -25,14 +23,11 @@ def train(
         None, help="Number of features to consider for best split", parser=none_str_to_none
     ),
     bootstrap: bool = typer.Option(True, help="Use bootstrap samples"),
-    output: str = typer.Option("rf_model.pkl", help="Path to save trained model"),
 ):
     """Example command to train a RandomForestClassifier on the breast cancer dataset."""
     # Load dataset
     data = datasets.load_breast_cancer()
-    X, y = data.data, data.target
-
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    x, y = data.data, data.target
 
     model = RandomForestClassifier(
         n_estimators=n_estimators,
@@ -45,15 +40,8 @@ def train(
         random_state=42,
     )
 
-    model.fit(X_train, y_train)
-    train_acc = accuracy_score(y_train, model.predict(X_train))
-    test_acc = accuracy_score(y_test, model.predict(X_test))
-
-    typer.echo(f"Train Accuracy: {train_acc:.4f}")
-    typer.echo(f"Test Accuracy:  {test_acc:.4f}")
-
-    joblib.dump(model, output)
-    typer.echo(f"Model saved to {output}")
+    scores = cross_val_score(model, x, y, cv=5, scoring="accuracy")
+    typer.echo(f"Cross-validation scores: {scores}")
 
     with mlflow.start_run(run_name="random_forest"):
         mlflow.set_tag("model", "RandomForestClassifier")
@@ -63,9 +51,8 @@ def train(
         mlflow.log_param("min_samples_leaf", min_samples_leaf)
         mlflow.log_param("max_features", max_features)
         mlflow.log_param("bootstrap", bootstrap)
-        mlflow.log_metric("train_accuracy", train_acc)
-        mlflow.log_metric("test_accuracy", test_acc)
-        mlflow.log_artifact(output)
+        mlflow.log_metric("mean_accuracy", scores.mean())
+        mlflow.log_metric("std_accuracy", scores.std())
 
 
 if __name__ == "__main__":

@@ -212,6 +212,10 @@ def plot_trial_timeline(
     df[start_col] = pd.to_datetime(df[start_col])
     df[end_col] = pd.to_datetime(df[end_col])
 
+    # Ensure timeline data is at least 1 second long
+    zero_duration = df[start_col] == df[end_col]
+    df.loc[zero_duration, end_col] += pd.Timedelta(seconds=1)
+
     # Create timeline plot
     fig = px.timeline(df, x_start=start_col, x_end=end_col, y=run_col, color=status_col, color_discrete_map=color_map)
 
